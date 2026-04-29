@@ -1,306 +1,94 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import * as THREE from 'three';
+import { projects } from './projects/data';
+import Nav from './components/Nav';
+import CustomCursor from './components/CustomCursor';
+import BackgroundScene from './components/BackgroundScene';
+import Magnetic from './components/Magnetic';
+import Reveal from './components/Reveal';
+import TiltCard from './components/TiltCard';
 import {
   Github, Linkedin, Mail, ArrowUpRight, Download, Phone, MapPin,
   Code2, Database, Cloud, Cpu, Zap, Brain, Award, GraduationCap,
-  Briefcase, Trophy, FolderGit2, Sparkles
+  Briefcase, Trophy, FolderGit2, Sparkles, ChevronDown, Bot
 } from 'lucide-react';
 
-// ============================================================
-// CUSTOM CURSOR — Dual-layer with magnetic hover detection
-// ============================================================
-const CustomCursor = () => {
-  const dotRef = useRef(null);
-  const ringRef = useRef(null);
+const RESUMES = [
+  { label: 'Software Development', file: '/JASKIRAT_RESUME_SD.pdf' },
+  { label: 'Data Analyst', file: '/RESUME_JASKIRAT_DA_FINAL.pdf' },
+  { label: 'Core (Electrical)', file: '/RESUME_JASKIRAT_COREFINAL.pdf' },
+];
+
+const ResumeDropdown = () => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
   useEffect(() => {
-    const dot = dotRef.current;
-    const ring = ringRef.current;
-    if (!dot || !ring) return;
-
-    let mouseX = 0, mouseY = 0;
-    let ringX = 0, ringY = 0;
-    let isHovering = false;
-
-    const handleMove = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-
-    const animate = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%) scale(${isHovering ? 1.8 : 1})`;
-      requestAnimationFrame(animate);
-    };
-    animate();
-
-    const handleEnter = () => {
-      isHovering = true;
-      ring.style.borderColor = '#ff6b3d';
-      ring.style.background = 'rgba(255, 107, 61, 0.1)';
-      dot.style.background = '#ff6b3d';
-    };
-    const handleLeave = () => {
-      isHovering = false;
-      ring.style.borderColor = 'rgba(245, 241, 234, 0.3)';
-      ring.style.background = 'transparent';
-      dot.style.background = '#f5f1ea';
-    };
-
-    window.addEventListener('mousemove', handleMove);
-    document.querySelectorAll('a, button, .hover-target').forEach((el) => {
-      el.addEventListener('mouseenter', handleEnter);
-      el.addEventListener('mouseleave', handleLeave);
-    });
-
-    return () => {
-      window.removeEventListener('mousemove', handleMove);
-    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   return (
-    <>
-      <div
-        ref={dotRef}
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
         style={{
-          position: 'fixed', top: 0, left: 0, width: '8px', height: '8px',
-          borderRadius: '50%', background: '#f5f1ea', pointerEvents: 'none',
-          zIndex: 9999, mixBlendMode: 'difference', transition: 'background 0.2s',
+          padding: '14px 28px', border: '1px solid rgba(245,241,234,0.2)',
+          borderRadius: '999px', fontSize: '14px', fontWeight: 500,
+          background: 'transparent', color: 'inherit', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: '8px',
         }}
-      />
-      <div
-        ref={ringRef}
-        style={{
-          position: 'fixed', top: 0, left: 0, width: '36px', height: '36px',
-          borderRadius: '50%', border: '1px solid rgba(245,241,234,0.3)',
-          pointerEvents: 'none', zIndex: 9998,
-          transition: 'background 0.3s, border-color 0.3s, scale 0.3s',
-        }}
-      />
-    </>
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <Download size={14} /> Download Resume
+        <ChevronDown size={14} style={{
+          transition: 'transform 0.2s',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+        }} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          style={{
+            position: 'absolute', top: 'calc(100% + 8px)', left: 0,
+            minWidth: '240px', padding: '8px',
+            background: '#0f0f12', border: '1px solid rgba(245,241,234,0.15)',
+            borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            zIndex: 50,
+          }}
+        >
+          {RESUMES.map((r) => (
+            <a
+              key={r.file}
+              href={r.file}
+              download
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '12px 14px', borderRadius: '10px',
+                fontSize: '14px', color: '#f5f1ea', textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,241,234,0.08)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Download size={14} /> {r.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
-// ============================================================
-// 3D BACKGROUND — Full-viewport ambient scene with drifting
-// low-poly shapes, wireframe rings, and a starfield. Sits
-// behind all content via `pointerEvents: none`.
-// ============================================================
-const BackgroundScene = () => {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 200);
-    camera.position.z = 18;
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
-
-    // Drifting low-poly shapes
-    const shapes = [];
-    const shapeDefs = [
-      { geo: new THREE.OctahedronGeometry(1.1, 0), color: 0xff6b3d, edgeColor: 0xffb89a },
-      { geo: new THREE.TetrahedronGeometry(1.3, 0), color: 0x5b9eff, edgeColor: 0xb8d4ff },
-      { geo: new THREE.IcosahedronGeometry(1.0, 0), color: 0xff6b3d, edgeColor: 0xffffff },
-      { geo: new THREE.DodecahedronGeometry(1.0, 0), color: 0x5b9eff, edgeColor: 0xffffff },
-      { geo: new THREE.OctahedronGeometry(0.9, 0), color: 0xff6b3d, edgeColor: 0xffb89a },
-      { geo: new THREE.TetrahedronGeometry(1.5, 0), color: 0x5b9eff, edgeColor: 0xb8d4ff },
-      { geo: new THREE.IcosahedronGeometry(1.2, 0), color: 0xffffff, edgeColor: 0xff6b3d },
-      { geo: new THREE.DodecahedronGeometry(0.8, 0), color: 0xff6b3d, edgeColor: 0xffffff },
-    ];
-
-    shapeDefs.forEach((def, i) => {
-      const mat = new THREE.MeshStandardMaterial({
-        color: def.color, metalness: 0.6, roughness: 0.4,
-        flatShading: true, transparent: true, opacity: 0.18,
-      });
-      const mesh = new THREE.Mesh(def.geo, mat);
-
-      const edges = new THREE.EdgesGeometry(def.geo);
-      const lineMat = new THREE.LineBasicMaterial({
-        color: def.edgeColor, transparent: true, opacity: 0.35,
-      });
-      const wire = new THREE.LineSegments(edges, lineMat);
-
-      const group = new THREE.Group();
-      group.add(mesh); group.add(wire);
-
-      // Spread shapes across the viewport in a wide volume
-      const angle = (i / shapeDefs.length) * Math.PI * 2;
-      const radius = 7 + Math.random() * 5;
-      group.position.x = Math.cos(angle) * radius;
-      group.position.y = Math.sin(angle) * radius * 0.6 + (Math.random() - 0.5) * 4;
-      group.position.z = (Math.random() - 0.5) * 8;
-
-      group.userData = {
-        rotSpeed: { x: (Math.random() - 0.5) * 0.3, y: (Math.random() - 0.5) * 0.3, z: (Math.random() - 0.5) * 0.2 },
-        floatSpeed: 0.3 + Math.random() * 0.5,
-        floatAmp: 0.4 + Math.random() * 0.6,
-        basePos: group.position.clone(),
-        edges, lineMat, mat,
-      };
-
-      scene.add(group);
-      shapes.push(group);
-    });
-
-    // Wireframe torus rings, slowly tumbling
-    const rings = [];
-    for (let i = 0; i < 3; i++) {
-      const torusGeo = new THREE.TorusGeometry(4 + i * 2, 0.02, 8, 80);
-      const torusMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0xff6b3d : 0x5b9eff,
-        transparent: true, opacity: 0.15,
-      });
-      const torus = new THREE.Mesh(torusGeo, torusMat);
-      torus.rotation.x = Math.random() * Math.PI;
-      torus.rotation.y = Math.random() * Math.PI;
-      torus.position.z = -3 - i * 2;
-      torus.userData = {
-        rotSpeed: { x: (Math.random() - 0.5) * 0.15, y: (Math.random() - 0.5) * 0.15 },
-        torusGeo, torusMat,
-      };
-      scene.add(torus);
-      rings.push(torus);
-    }
-
-    // Starfield
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 1500;
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-      starPositions[i * 3]     = (Math.random() - 0.5) * 80;
-      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 60;
-      starPositions[i * 3 + 2] = (Math.random() - 0.5) * 40 - 5;
-      const tone = Math.random();
-      if (tone < 0.6) {
-        starColors[i * 3] = 1; starColors[i * 3 + 1] = 0.95; starColors[i * 3 + 2] = 0.9;
-      } else if (tone < 0.85) {
-        starColors[i * 3] = 1; starColors[i * 3 + 1] = 0.55; starColors[i * 3 + 2] = 0.3;
-      } else {
-        starColors[i * 3] = 0.4; starColors[i * 3 + 1] = 0.65; starColors[i * 3 + 2] = 1;
-      }
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    const starMat = new THREE.PointsMaterial({
-      size: 0.06, transparent: true, opacity: 0.7,
-      vertexColors: true, blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const stars = new THREE.Points(starGeo, starMat);
-    scene.add(stars);
-
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const keyLight = new THREE.PointLight(0xff6b3d, 4, 40);
-    keyLight.position.set(8, 6, 5);
-    scene.add(keyLight);
-    const fillLight = new THREE.PointLight(0x5b9eff, 3, 40);
-    fillLight.position.set(-8, -4, 5);
-    scene.add(fillLight);
-    const rimLight = new THREE.PointLight(0xffffff, 1.5, 30);
-    rimLight.position.set(0, 8, -8);
-    scene.add(rimLight);
-
-    // Mouse + scroll parallax
-    const parallax = { x: 0, y: 0, tx: 0, ty: 0, scrollY: 0 };
-    const onMove = (e) => {
-      parallax.tx = (e.clientX / window.innerWidth - 0.5) * 2;
-      parallax.ty = (e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    const onScroll = () => { parallax.scrollY = window.scrollY; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    let frameId;
-    const clock = new THREE.Clock();
-    const animate = () => {
-      const t = clock.getElapsedTime();
-      parallax.x += (parallax.tx - parallax.x) * 0.04;
-      parallax.y += (parallax.ty - parallax.y) * 0.04;
-
-      // Shapes: spin + gentle vertical bob + horizontal drift
-      shapes.forEach((g, i) => {
-        const u = g.userData;
-        g.rotation.x += u.rotSpeed.x * 0.01;
-        g.rotation.y += u.rotSpeed.y * 0.01;
-        g.rotation.z += u.rotSpeed.z * 0.01;
-        g.position.x = u.basePos.x + Math.sin(t * u.floatSpeed * 0.4 + i) * u.floatAmp;
-        g.position.y = u.basePos.y + Math.cos(t * u.floatSpeed * 0.5 + i * 0.7) * u.floatAmp * 0.8;
-      });
-
-      // Tumbling rings
-      rings.forEach((r) => {
-        r.rotation.x += r.userData.rotSpeed.x * 0.01;
-        r.rotation.y += r.userData.rotSpeed.y * 0.01;
-      });
-
-      // Slow starfield drift
-      stars.rotation.y = t * 0.01;
-      stars.rotation.x = t * 0.005;
-
-      // Camera parallax — mouse + slight scroll-driven dolly
-      camera.position.x += (parallax.x * 1.5 - camera.position.x) * 0.05;
-      camera.position.y += (-parallax.y * 1.0 - parallax.scrollY * 0.0015 - camera.position.y) * 0.05;
-      camera.lookAt(0, 0, 0);
-
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const onResize = () => {
-      const nw = window.innerWidth;
-      const nh = window.innerHeight;
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh);
-    };
-    window.addEventListener('resize', onResize);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-      shapes.forEach((g) => {
-        g.userData.edges.dispose();
-        g.userData.lineMat.dispose();
-        g.userData.mat.dispose();
-      });
-      shapeDefs.forEach((d) => d.geo.dispose());
-      rings.forEach((r) => { r.userData.torusGeo.dispose(); r.userData.torusMat.dispose(); });
-      starGeo.dispose(); starMat.dispose();
-      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
-      renderer.dispose();
-    };
-  }, []);
-
-  return (
-    <div
-      ref={mountRef}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 0,
-        pointerEvents: 'none',
-      }}
-    />
-  );
-};
 
 // ============================================================
 // 3D HERO — Icosahedron with edges, particles, chromatic glow
@@ -449,102 +237,9 @@ const HeroScene = () => {
 // ============================================================
 // MAGNETIC BUTTON — Pulls toward cursor on hover
 // ============================================================
-const Magnetic = ({ children, strength = 0.4 }) => {
-  const ref = useRef(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-
-  const handleMove = (e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) * strength;
-    const y = (e.clientY - rect.top - rect.height / 2) * strength;
-    setPos({ x, y });
-  };
-  const handleLeave = () => setPos({ x: 0, y: 0 });
-
-  return (
-    <div
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      style={{
-        display: 'inline-block',
-        transform: `translate(${pos.x}px, ${pos.y}px)`,
-        transition: 'transform 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
-      }}
-    >
-      {children}
-    </div>
-  );
-};
-
 // ============================================================
 // TILT CARD with depth and glow
 // ============================================================
-const TiltCard = ({ children, intensity = 12 }) => {
-  const ref = useRef(null);
-  const [t, setT] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
-
-  const handleMove = (e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setT({
-      rx: (y - 0.5) * -intensity,
-      ry: (x - 0.5) * intensity,
-      gx: x * 100,
-      gy: y * 100,
-    });
-  };
-  const handleLeave = () => setT({ rx: 0, ry: 0, gx: 50, gy: 50 });
-
-  return (
-    <div
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      style={{
-        transform: `perspective(1000px) rotateX(${t.rx}deg) rotateY(${t.ry}deg) translateZ(0)`,
-        transition: 'transform 0.2s ease-out',
-        transformStyle: 'preserve-3d',
-        position: 'relative',
-        height: '100%',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute', inset: 0, borderRadius: 'inherit',
-          background: `radial-gradient(circle at ${t.gx}% ${t.gy}%, rgba(255,107,61,0.15) 0%, transparent 50%)`,
-          opacity: t.rx === 0 && t.ry === 0 ? 0 : 1,
-          transition: 'opacity 0.3s', pointerEvents: 'none', zIndex: 2,
-        }}
-      />
-      {children}
-    </div>
-  );
-};
-
-// ============================================================
-// REVEAL — Scroll-triggered fade up
-// ============================================================
-const Reveal = ({ children, delay = 0 }) => {
-  const ref = useRef(null);
-  const [v, setV] = useState(false);
-  useEffect(() => {
-    const ob = new IntersectionObserver(([e]) => e.isIntersecting && setV(true), { threshold: 0.1 });
-    if (ref.current) ob.observe(ref.current);
-    return () => ob.disconnect();
-  }, []);
-  return (
-    <div ref={ref} style={{
-      opacity: v ? 1 : 0,
-      transform: v ? 'translateY(0)' : 'translateY(40px)',
-      transition: `opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
-    }}>{children}</div>
-  );
-};
-
 // ============================================================
 // COUNT-UP NUMBER
 // ============================================================
@@ -594,68 +289,27 @@ export default function Portfolio() {
     },
     {
       cat: 'Data & ML', icon: <Brain size={22} />, color: '#a855f7',
-      items: ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Statsmodels (SARIMA)', 'LangChain', 'RAG', 'OpenAI', 'LLaMA 3.2'],
+      items: ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Structured Query Language(SQL)', 'Statsmodels (SARIMA)', 'Power BI', 'Excel'],
+    },
+    {
+      cat: 'GenAI & LLM', icon: <Bot size={22} />, color: '#a78bfa',
+      items: ['LangChain', 'RAG', 'OpenAI', 'LLaMA 3.2', 'VectorDB', 'AnthropicAI API', 'OpenAI API', 'Prompt Engineering'],
     },
     {
       cat: 'Databases', icon: <Database size={22} />, color: '#10b981',
-      items: ['MySQL', 'SQL', 'Prisma ORM', 'Supabase', 'VectorDB'],
+      items: ['MySQL', 'Prisma ORM', 'Supabase', 'VectorDB'],
     },
     {
       cat: 'Cloud & DevOps', icon: <Cloud size={22} />, color: '#06b6d4',
-      items: ['Docker', 'Prometheus', 'Terraform', 'Power BI', 'DAX'],
+      items: ['Docker', 'Prometheus', 'Terraform', 'AWS(Amazon Web Service'],
     },
     {
       cat: 'CS Fundamentals', icon: <Sparkles size={22} />, color: '#f59e0b',
-      items: ['DSA', 'OOP', 'DBMS', 'Operating Systems', 'Computer Networks'],
+      items: ['Data Structure Algorithm', 'Object Oriented Programming', 'Database Management System', 'Operating Systems', 'Computer Networks'],
     },
     {
       cat: 'Core Electrical', icon: <Zap size={22} />, color: '#eab308',
-      items: ['MATLAB / Simulink', 'Eagle PCB Design', 'Arduino', 'Power Electronics', 'SMPS Design', 'PFC Systems', 'IoT'],
-    },
-  ];
-
-  const projects = [
-    {
-      num: '01',
-      title: 'Warehouse Optimizer — AI Inventory & Fulfillment Platform',
-      date: '2026',
-      desc: 'AI-powered platform that turns warehouse photos into structured stock data in seconds. A YOLOv8 + EasyOCR + Claude pipeline auto-extracts SKUs from shipment images and updates inventory in real time, paired with order management, ARIMA-based demand forecasting, smart shipment suggestions, a live WebSocket dashboard, and one-click Excel reporting. End-to-end image-to-inventory in under 30 seconds, 25+ documented REST endpoints, and zero-config deployment via `make up`.',
-      tags: ['FastAPI', 'PostgreSQL', 'Redis', 'YOLOv8', 'EasyOCR', 'Claude', 'ARIMA', 'React 18', 'WebSockets', 'Docker'],
-    },
-    {
-      num: '02',
-      title: 'Smart School ERP System',
-      date: 'Dec 2024',
-      desc: 'Full-stack multi-role ERP platform supporting students, parents, faculty, and administrators with RBAC for secure, isolated data access. Containerized with Docker for production-grade deployment.',
-      tags: ['React.js', 'Prisma', 'Supabase', 'ClerkAuth', 'Docker'],
-    },
-    {
-      num: '03',
-      title: 'AI LinkedIn Post Generator',
-      date: 'Jul 2025',
-      desc: 'AI-powered content tool that generates context-aware LinkedIn posts by analyzing influencers\' historical content. Built a RAG pipeline to preserve unique writing styles using LLaMA 3.2.',
-      tags: ['LangChain', 'RAG', 'VectorDB', 'Streamlit', 'LLaMA 3.2'],
-    },
-    {
-      num: '04',
-      title: 'FutureFlow — Demand Forecast System',
-      date: 'Dec 2024',
-      desc: 'Time-series demand forecasting platform using SARIMA modeling. Built Power BI dashboard with KPIs (MoM Growth, YoY Growth, Forecast Error) and DAX measures for real-time monitoring.',
-      tags: ['Python', 'SQL', 'statsmodels', 'Power BI', 'DAX'],
-    },
-    {
-      num: '05',
-      title: 'Universal EV Battery Charger',
-      date: 'Dec 2024',
-      desc: 'Designed a forward converter-based battery charger PCB using Eagle CAD. Conducted high-voltage testing up to 300V with full protection circuit for system safety and reliability.',
-      tags: ['Eagle CAD', 'SMPS', 'High-Voltage Testing', 'PCB Design'],
-    },
-    {
-      num: '06',
-      title: 'Power Factor Correction Device',
-      date: 'May 2025',
-      desc: 'Simulated a PFC system using a boost converter topology with ICE3PCS01G IC controller. Achieved improved power factor and reduced THD, validating energy efficiency gains.',
-      tags: ['MATLAB', 'Simulink', 'Boost Converter', 'Power Electronics'],
+      items: ['MATLAB / Simulink', 'Eagle PCB Design', 'Power Electronics','IoT'],
     },
   ];
 
@@ -702,7 +356,7 @@ export default function Portfolio() {
     { title: 'Core Team Member — Bitotsav', org: "BIT Mesra's biggest cultural fest", icon: <Sparkles size={22} /> },
     { title: 'Co-led Induction Project', org: "Honoring India's freedom fighters", icon: <Sparkles size={22} /> },
     { title: '300+ LeetCode Problems', org: 'Handle: Jaskirat-singh', icon: <Code2 size={22} /> },
-    { title: 'EBAJA SAEINDIA 2025', org: 'Team Aveon Racing — Powertrain Lead', icon: <Zap size={22} /> },
+    { title: 'EBAJA SAEINDIA 2025', org: 'Team Aveon Racing — Management Lead', icon: <Zap size={22} /> },
   ];
 
   const education = [
@@ -778,32 +432,7 @@ export default function Portfolio() {
       <div style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
 
         {/* NAV */}
-        <nav style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '32px 0', position: 'sticky', top: 0,
-          background: 'rgba(8,8,10,0.7)', backdropFilter: 'blur(20px)',
-          zIndex: 100, borderBottom: '1px solid rgba(245,241,234,0.06)',
-        }}>
-          <div style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.02em' }}>
-            JS<span style={{ color: '#ff6b3d' }}>.</span>
-          </div>
-          <div style={{ display: 'flex', gap: '32px', fontSize: '14px', color: 'rgba(245,241,234,0.7)' }}>
-            <a href="#about">About</a>
-            <a href="#skills">Skills</a>
-            <a href="#experience">Experience</a>
-            <a href="#projects">Projects</a>
-            <a href="#contact">Contact</a>
-          </div>
-          <Magnetic>
-            <a href="mailto:jaskiratsingh314276@gmail.com" style={{
-              padding: '10px 22px', background: '#ff6b3d', color: '#08080a',
-              borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
-              Hire me <ArrowUpRight size={14} />
-            </a>
-          </Magnetic>
-        </nav>
+        <Nav />
 
         {/* HERO */}
         <section style={{
@@ -813,11 +442,11 @@ export default function Portfolio() {
           <div>
             <Reveal>
               <div style={{
-                fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+                fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
                 color: '#ff6b3d', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px',
               }}>
                 <span style={{ width: '32px', height: '1px', background: '#ff6b3d' }} />
-                Available for full-time roles · 2026
+                Available for Opportunities · 2026
               </div>
             </Reveal>
             <Reveal delay={0.1}>
@@ -828,7 +457,7 @@ export default function Portfolio() {
                 Hi, I'm<br />
                 <span className="glow" style={{
                   fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-                }}>Jaskirat</span><br />
+                }}>Jaskirat Singh</span><br />
                 — I build things.
               </h1>
             </Reveal>
@@ -851,15 +480,7 @@ export default function Portfolio() {
                     See my work <ArrowUpRight size={16} />
                   </a>
                 </Magnetic>
-                <Magnetic>
-                  <a href="/resume.pdf" download style={{
-                    padding: '14px 28px', border: '1px solid rgba(245,241,234,0.2)',
-                    borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                  }}>
-                    <Download size={14} /> Download Resume
-                  </a>
-                </Magnetic>
+                <ResumeDropdown />
               </div>
             </Reveal>
           </div>
@@ -872,7 +493,7 @@ export default function Portfolio() {
         <section id="about" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— About me</div>
           </Reveal>
@@ -943,7 +564,7 @@ export default function Portfolio() {
         <section id="skills" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Skills & Tools</div>
           </Reveal>
@@ -998,7 +619,7 @@ export default function Portfolio() {
         <section id="experience" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Experience</div>
           </Reveal>
@@ -1074,7 +695,7 @@ export default function Portfolio() {
         <section id="projects" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Selected work</div>
           </Reveal>
@@ -1092,7 +713,7 @@ export default function Portfolio() {
             {projects.map((p, i) => (
               <Reveal key={p.num} delay={i * 0.08}>
                 <TiltCard intensity={6}>
-                  <a href="#" className="hover-target" style={{
+                  <Link href={`/projects/${p.slug}`} className="hover-target" style={{
                     display: 'grid', gridTemplateColumns: '80px 1fr auto',
                     gap: '32px', alignItems: 'center', padding: '40px',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
@@ -1129,7 +750,7 @@ export default function Portfolio() {
                       </div>
                     </div>
                     <ArrowUpRight size={28} style={{ color: '#ff6b3d' }} />
-                  </a>
+                  </Link>
                 </TiltCard>
               </Reveal>
             ))}
@@ -1140,7 +761,7 @@ export default function Portfolio() {
         <section style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Achievements</div>
           </Reveal>
@@ -1189,7 +810,7 @@ export default function Portfolio() {
         <section style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Education</div>
           </Reveal>
@@ -1248,7 +869,7 @@ export default function Portfolio() {
         <section id="contact" style={{ padding: '140px 0 80px', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
             <div style={{
-              fontSize: '13px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Get in touch</div>
           </Reveal>
@@ -1302,7 +923,7 @@ export default function Portfolio() {
           color: 'rgba(245,241,234,0.4)', fontSize: '13px',
         }}>
           <div>© 2026 Jaskirat Singh</div>
-          <div>Crafted with care · Ranchi, India</div>
+          <div>Crafted with passion · Ranchi, India</div>
         </footer>
       </div>
     </div>
