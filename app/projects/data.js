@@ -14,7 +14,7 @@ export const projects = [
       'Live WebSocket dashboard with one-click Excel reporting',
       'Zero-config deployment via `make up` (Docker Compose)',
     ],
-    links: { github: '', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/WAREHOUSE-OPTIMIZATION.git', demo: '' },
   },
   {
     slug: 'smart-school-erp',
@@ -30,7 +30,7 @@ export const projects = [
       'Prisma + Supabase for type-safe data access',
       'Containerized with Docker for production-grade deployment',
     ],
-    links: { github: '', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/Winter-Project-24.git', demo: '' },
   },
   {
     slug: 'ai-linkedin-post-generator',
@@ -45,7 +45,7 @@ export const projects = [
       'Context-aware post generation from historical content embeddings',
       'Streamlit interface for fast prompt iteration',
     ],
-    links: { github: '', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/AI-POST-GENRATOR.git', demo: '' },
   },
   {
     slug: 'futureflow-demand-forecast',
@@ -60,7 +60,7 @@ export const projects = [
       'Custom DAX measures for real-time monitoring',
       'SQL data pipeline feeding the forecasting layer',
     ],
-    links: { github: '', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/DEMAND-ANALYSIS-ARIMA.git', demo: '' },
   },
   {
     slug: 'ev-battery-charger',
