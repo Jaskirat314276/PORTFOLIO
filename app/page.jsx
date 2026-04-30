@@ -39,6 +39,7 @@ const ResumeDropdown = () => {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        className="resume-button"
         style={{
           padding: '14px 28px', border: '1px solid rgba(245,241,234,0.2)',
           borderRadius: '999px', fontSize: '14px', fontWeight: 500,
@@ -110,6 +111,9 @@ const HeroScene = () => {
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
     mount.appendChild(renderer.domElement);
 
     // Main icosahedron — slightly translucent
@@ -214,15 +218,19 @@ const HeroScene = () => {
     const onResize = () => {
       const nw = mount.clientWidth;
       const nh = mount.clientHeight;
+      if (nw === 0 || nh === 0) return;
       camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh);
+      renderer.setSize(nw, nh, false);
     };
     window.addEventListener('resize', onResize);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(mount);
 
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', onResize);
+      if (ro) ro.disconnect();
       mount.removeEventListener('mousemove', onMove);
       mount.removeChild(renderer.domElement);
       icoGeo.dispose(); icoMat.dispose(); edges.dispose(); lineMat.dispose();
@@ -231,7 +239,7 @@ const HeroScene = () => {
     };
   }, []);
 
-  return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
+  return <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />;
 };
 
 // ============================================================
@@ -397,8 +405,10 @@ export default function Portfolio() {
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { cursor: none !important; }
-        a, button { cursor: none !important; }
+        @media (hover: hover) and (pointer: fine) {
+          body { cursor: none; }
+          a, button { cursor: none; }
+        }
         a { color: inherit; text-decoration: none; }
         .glow { text-shadow: 0 0 60px rgba(255, 107, 61, 0.4); }
       `}</style>
@@ -409,13 +419,13 @@ export default function Portfolio() {
       <BackgroundScene />
 
       {/* Ambient gradient orbs */}
-      <div style={{
+      <div className="ambient-orb" style={{
         position: 'fixed', top: '10%', left: '-15%', width: '600px', height: '600px',
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(255,107,61,0.15) 0%, transparent 70%)',
         filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
       }} />
-      <div style={{
+      <div className="ambient-orb" style={{
         position: 'fixed', bottom: '5%', right: '-15%', width: '700px', height: '700px',
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(91,158,255,0.12) 0%, transparent 70%)',
@@ -429,19 +439,19 @@ export default function Portfolio() {
         opacity: 0.05, pointerEvents: 'none', zIndex: 1, mixBlendMode: 'overlay',
       }} />
 
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
+      <div className="page-container" style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
 
         {/* NAV */}
         <Nav />
 
         {/* HERO */}
-        <section style={{
+        <section className="hero-grid" style={{
           display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px',
           alignItems: 'center', padding: '80px 0 120px', minHeight: '90vh',
         }}>
           <div>
             <Reveal>
-              <div style={{
+              <div className="hero-eyebrow" style={{
                 fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
                 color: '#ff6b3d', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px',
               }}>
@@ -450,8 +460,8 @@ export default function Portfolio() {
               </div>
             </Reveal>
             <Reveal delay={0.1}>
-              <h1 style={{
-                fontSize: 'clamp(48px, 7vw, 96px)', lineHeight: 0.95,
+              <h1 className="hero-h1" style={{
+                fontSize: 'clamp(40px, 7vw, 96px)', lineHeight: 0.95,
                 letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '32px',
               }}>
                 Hi, I'm<br />
@@ -462,7 +472,7 @@ export default function Portfolio() {
               </h1>
             </Reveal>
             <Reveal delay={0.2}>
-              <p style={{
+              <p className="hero-paragraph" style={{
                 fontSize: '18px', color: 'rgba(245,241,234,0.7)',
                 maxWidth: '520px', marginBottom: '40px', lineHeight: 1.6,
               }}>
@@ -470,9 +480,9 @@ export default function Portfolio() {
               </p>
             </Reveal>
             <Reveal delay={0.3}>
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div className="hero-cta-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <Magnetic>
-                  <a href="#projects" style={{
+                  <a href="#projects" className="hero-cta" style={{
                     padding: '14px 28px', background: '#f5f1ea', color: '#08080a',
                     borderRadius: '999px', fontSize: '14px', fontWeight: 500,
                     display: 'flex', alignItems: 'center', gap: '8px',
@@ -484,23 +494,23 @@ export default function Portfolio() {
               </div>
             </Reveal>
           </div>
-          <div style={{ height: '550px', width: '100%' }}>
+          <div className="hero-3d" style={{ height: '550px', width: '100%' }}>
             <HeroScene />
           </div>
         </section>
 
         {/* ABOUT + STATS */}
-        <section id="about" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section id="about" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— About me</div>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start', marginBottom: '80px' }}>
+          <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start', marginBottom: '80px' }}>
             <Reveal delay={0.1}>
-              <h2 style={{
-                fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+              <h2 className="section-h2" style={{
+                fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
                 letterSpacing: '-0.02em', fontWeight: 500,
               }}>
                 Engineer at the <span style={{
@@ -535,18 +545,18 @@ export default function Portfolio() {
           </div>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
             {stats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <TiltCard intensity={8}>
-                  <div className="hover-target" style={{
+                  <div className="hover-target stat-card" style={{
                     padding: '32px', height: '100%',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
                     backdropFilter: 'blur(10px)', position: 'relative', overflow: 'hidden',
                   }}>
                     <div style={{ color: '#ff6b3d', marginBottom: '20px' }}>{s.icon}</div>
-                    <div style={{
+                    <div className="stat-card-value" style={{
                       fontSize: '48px', fontWeight: 600, letterSpacing: '-0.02em',
                       lineHeight: 1, marginBottom: '8px',
                     }}>
@@ -561,16 +571,16 @@ export default function Portfolio() {
         </section>
 
         {/* SKILLS */}
-        <section id="skills" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section id="skills" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Skills & Tools</div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h2 style={{
-              fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+            <h2 className="section-h2" style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
             }}>
               The <span style={{
@@ -578,11 +588,11 @@ export default function Portfolio() {
               }}>toolkit</span> I work with.
             </h2>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
             {skills.map((s, i) => (
               <Reveal key={s.cat} delay={i * 0.05}>
                 <TiltCard>
-                  <div className="hover-target" style={{
+                  <div className="hover-target skill-card" style={{
                     padding: '32px', height: '100%',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
@@ -616,16 +626,16 @@ export default function Portfolio() {
         </section>
 
         {/* EXPERIENCE */}
-        <section id="experience" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section id="experience" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Experience</div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h2 style={{
-              fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+            <h2 className="section-h2" style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
             }}>
               Where I've <span style={{
@@ -637,13 +647,13 @@ export default function Portfolio() {
             {experience.map((e, i) => (
               <Reveal key={e.company} delay={i * 0.1}>
                 <TiltCard intensity={6}>
-                  <div className="hover-target" style={{
+                  <div className="hover-target exp-card" style={{
                     padding: '40px',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
                     backdropFilter: 'blur(10px)',
                   }}>
-                    <div style={{
+                    <div className="exp-card-header" style={{
                       display: 'flex', justifyContent: 'space-between',
                       flexWrap: 'wrap', gap: '12px', marginBottom: '20px',
                     }}>
@@ -692,16 +702,16 @@ export default function Portfolio() {
         </section>
 
         {/* PROJECTS */}
-        <section id="projects" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section id="projects" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Selected work</div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h2 style={{
-              fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+            <h2 className="section-h2" style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
             }}>
               Things I've <span style={{
@@ -713,14 +723,14 @@ export default function Portfolio() {
             {projects.map((p, i) => (
               <Reveal key={p.num} delay={i * 0.08}>
                 <TiltCard intensity={6}>
-                  <Link href={`/projects/${p.slug}`} className="hover-target" style={{
+                  <Link href={`/projects/${p.slug}`} className="hover-target project-row" style={{
                     display: 'grid', gridTemplateColumns: '80px 1fr auto',
                     gap: '32px', alignItems: 'center', padding: '40px',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
                   }}>
-                    <div style={{
+                    <div className="project-num" style={{
                       fontFamily: "'Instrument Serif', serif", fontSize: '56px',
                       color: '#ff6b3d', lineHeight: 1,
                     }}>{p.num}</div>
@@ -749,7 +759,7 @@ export default function Portfolio() {
                         ))}
                       </div>
                     </div>
-                    <ArrowUpRight size={28} style={{ color: '#ff6b3d' }} />
+                    <ArrowUpRight size={28} className="project-row-arrow" style={{ color: '#ff6b3d' }} />
                   </Link>
                 </TiltCard>
               </Reveal>
@@ -758,16 +768,16 @@ export default function Portfolio() {
         </section>
 
         {/* ACHIEVEMENTS */}
-        <section style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Achievements</div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h2 style={{
-              fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+            <h2 className="section-h2" style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
             }}>
               Wins & <span style={{
@@ -775,11 +785,11 @@ export default function Portfolio() {
               }}>recognition</span>.
             </h2>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
             {achievements.map((a, i) => (
               <Reveal key={a.title} delay={i * 0.06}>
                 <TiltCard intensity={8}>
-                  <div className="hover-target" style={{
+                  <div className="hover-target achievement-card" style={{
                     padding: '28px', height: '100%',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
@@ -807,16 +817,16 @@ export default function Portfolio() {
         </section>
 
         {/* EDUCATION */}
-        <section style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Education</div>
           </Reveal>
           <Reveal delay={0.1}>
-            <h2 style={{
-              fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.05,
+            <h2 className="section-h2" style={{
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
             }}>
               My <span style={{
@@ -828,7 +838,7 @@ export default function Portfolio() {
             {education.map((ed, i) => (
               <Reveal key={ed.school} delay={i * 0.1}>
                 <TiltCard intensity={5}>
-                  <div className="hover-target" style={{
+                  <div className="hover-target edu-row" style={{
                     padding: '32px',
                     background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
                     border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
@@ -854,7 +864,7 @@ export default function Portfolio() {
                         {ed.date} · {ed.location}
                       </p>
                     </div>
-                    <span style={{
+                    <span className="edu-grade" style={{
                       fontFamily: "'Instrument Serif', serif", fontSize: '24px',
                       color: '#f5f1ea', whiteSpace: 'nowrap',
                     }}>{ed.grade}</span>
@@ -866,16 +876,16 @@ export default function Portfolio() {
         </section>
 
         {/* CONTACT */}
-        <section id="contact" style={{ padding: '140px 0 80px', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
+        <section id="contact" className="contact-section" style={{ padding: '140px 0 80px', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div style={{
+            <div className="section-eyebrow" style={{
               fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#ff6b3d', marginBottom: '24px',
             }}>— Get in touch</div>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="glow" style={{
-              fontSize: 'clamp(48px, 8vw, 110px)', lineHeight: 0.95,
+              fontSize: 'clamp(40px, 8vw, 110px)', lineHeight: 0.95,
               letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '40px',
             }}>
               Let's build<br />
@@ -886,16 +896,17 @@ export default function Portfolio() {
           </Reveal>
           <Reveal delay={0.2}>
             <Magnetic strength={0.2}>
-              <a href="mailto:jaskiratsingh314276@gmail.com" style={{
+              <a href="mailto:jaskiratsingh314276@gmail.com" className="contact-email" style={{
                 fontFamily: "'Instrument Serif', serif",
-                fontSize: 'clamp(24px, 3.5vw, 40px)', color: '#f5f1ea',
+                fontSize: 'clamp(20px, 3.5vw, 40px)', color: '#f5f1ea',
                 borderBottom: '1px solid rgba(245,241,234,0.2)', paddingBottom: '8px',
                 display: 'inline-block', marginBottom: '48px',
+                wordBreak: 'break-word',
               }}>jaskiratsingh314276@gmail.com →</a>
             </Magnetic>
           </Reveal>
           <Reveal delay={0.3}>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
+            <div className="contact-socials" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
               {[
                 { icon: <Github size={16} />, label: 'GitHub', href: 'https://github.com/' },
                 { icon: <Linkedin size={16} />, label: 'LinkedIn', href: 'https://linkedin.com/' },
@@ -917,7 +928,7 @@ export default function Portfolio() {
         </section>
 
         {/* FOOTER */}
-        <footer style={{
+        <footer className="footer" style={{
           padding: '32px 0', borderTop: '1px solid rgba(245,241,234,0.08)',
           display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
           color: 'rgba(245,241,234,0.4)', fontSize: '13px',

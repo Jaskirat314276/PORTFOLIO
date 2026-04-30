@@ -24,3 +24,115 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+html, body { max-width: 100%; overflow-x: hidden; }
+
+/* ============================================================
+   Responsive overrides for inline-styled portfolio components
+   ============================================================ */
+
+/* Touch / coarse-pointer devices: never hide cursor, hide custom cursor */
+@media (hover: none), (pointer: coarse) {
+  body, a, button { cursor: auto !important; }
+  .custom-cursor-dot, .custom-cursor-ring { display: none !important; }
+}
+
+/* Mobile menu toggle is hidden by default; revealed at the mobile breakpoint */
+.nav-toggle { display: none; }
+
+/* Tablet / small desktop */
+@media (max-width: 1024px) {
+  .page-container { padding: 0 24px !important; }
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+    padding: 60px 0 80px !important;
+    min-height: auto !important;
+  }
+  .hero-3d { height: 420px !important; }
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .page-container { padding: 0 20px !important; }
+  .nav { padding: 18px 0 !important; }
+  .nav-logo { font-size: 24px !important; }
+  .nav-links { display: none !important; }
+  .nav-toggle { display: inline-flex !important; }
+  .nav-cta { padding: 8px 16px !important; font-size: 13px !important; }
+
+  .section { padding: 72px 0 !important; }
+  .contact-section { padding: 96px 0 64px !important; }
+
+  .hero-grid { padding: 32px 0 56px !important; gap: 24px !important; }
+  .hero-3d { height: 320px !important; }
+  .hero-eyebrow { font-size: 13px !important; margin-bottom: 20px !important; }
+  .hero-paragraph { font-size: 16px !important; margin-bottom: 28px !important; }
+  .hero-cta-row { gap: 12px !important; }
+  .hero-h1 { margin-bottom: 24px !important; }
+
+  .section-eyebrow { font-size: 13px !important; margin-bottom: 18px !important; }
+  .section-h2 { margin-bottom: 36px !important; }
+
+  .stat-card { padding: 22px !important; }
+  .stat-card-value { font-size: 36px !important; margin-bottom: 6px !important; }
+
+  .skill-card { padding: 24px !important; }
+  .skill-card h4 { font-size: 22px !important; margin-bottom: 16px !important; }
+
+  .exp-card { padding: 24px !important; }
+  .exp-card h3 { font-size: 20px !important; }
+  .exp-card-header { flex-direction: column !important; align-items: flex-start !important; }
+
+  .project-row {
+    grid-template-columns: 56px 1fr !important;
+    padding: 24px !important;
+    gap: 16px !important;
+  }
+  .project-row-arrow { display: none !important; }
+  .project-num { font-size: 44px !important; }
+  .project-row h3 { font-size: 20px !important; }
+
+  .achievement-card { padding: 22px !important; gap: 14px !important; }
+
+  .edu-row {
+    grid-template-columns: auto 1fr !important;
+    padding: 24px !important;
+    gap: 16px !important;
+  }
+  .edu-grade {
+    grid-column: 1 / -1 !important;
+    font-size: 18px !important;
+    text-align: left !important;
+    margin-top: 4px !important;
+  }
+  .edu-row h3 { font-size: 18px !important; }
+
+  .contact-email { margin-bottom: 32px !important; }
+  .contact-socials { gap: 10px !important; }
+  .contact-socials a { padding: 10px 16px !important; font-size: 13px !important; }
+
+  .footer { flex-direction: column !important; gap: 6px !important; text-align: center !important; }
+
+  .project-detail-main { padding: 32px 0 96px !important; }
+  .project-detail-num { font-size: 64px !important; }
+  .project-detail-back { margin-bottom: 32px !important; }
+
+  .ambient-orb { display: none !important; }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .page-container { padding: 0 16px !important; }
+  .hero-3d { height: 260px !important; }
+  .hero-cta, .resume-button { padding: 12px 20px !important; font-size: 13px !important; }
+  .nav-cta-label { display: none !important; }
+  .nav-cta { padding: 8px !important; }
+  .stat-card-value { font-size: 32px !important; }
+  .project-num { font-size: 36px !important; }
+  .contact-socials a { padding: 8px 14px !important; font-size: 12px !important; }
+}

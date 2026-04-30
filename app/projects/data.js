@@ -45,7 +45,7 @@ export const projects = [
       'Context-aware post generation from historical content embeddings',
       'Streamlit interface for fast prompt iteration',
     ],
-    links: { github: 'https://github.com/Jaskirat314276/AI-POST-GENRATOR.git', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/AI-POST-GENRATOR.git', demo: 'https://postge.streamlit.app/' },
   },
   {
     slug: 'futureflow-demand-forecast',
@@ -60,7 +60,7 @@ export const projects = [
       'Custom DAX measures for real-time monitoring',
       'SQL data pipeline feeding the forecasting layer',
     ],
-    links: { github: 'https://github.com/Jaskirat314276/DEMAND-ANALYSIS-ARIMA.git', demo: '' },
+    links: { github: 'https://github.com/Jaskirat314276/DEMAND-ANALYSIS-ARIMA.git', demo: 'https://demand-analysis.streamlit.app/' },
   },
   {
     slug: 'ev-battery-charger',

@@ -16,6 +16,13 @@ export const metadata = {
   description: "Created by Jaskirat",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#08080a",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html

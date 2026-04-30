@@ -1,12 +1,22 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function CustomCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const apply = () => setEnabled(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
     const dot = dotRef.current;
     const ring = ringRef.current;
     if (!dot || !ring) return;
@@ -51,12 +61,15 @@ export default function CustomCursor() {
     return () => {
       window.removeEventListener('mousemove', handleMove);
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>
       <div
         ref={dotRef}
+        className="custom-cursor-dot"
         style={{
           position: 'fixed', top: 0, left: 0, width: '8px', height: '8px',
           borderRadius: '50%', background: '#f5f1ea', pointerEvents: 'none',
@@ -65,6 +78,7 @@ export default function CustomCursor() {
       />
       <div
         ref={ringRef}
+        className="custom-cursor-ring"
         style={{
           position: 'fixed', top: 0, left: 0, width: '36px', height: '36px',
           borderRadius: '50%', border: '1px solid rgba(245,241,234,0.3)',

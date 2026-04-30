@@ -42,8 +42,10 @@ export default async function ProjectPage({ params }) {
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { cursor: none !important; }
-        a, button { cursor: none !important; }
+        @media (hover: hover) and (pointer: fine) {
+          body { cursor: none; }
+          a, button { cursor: none; }
+        }
         a { color: inherit; text-decoration: none; }
         .glow { text-shadow: 0 0 60px rgba(255, 107, 61, 0.4); }
       `}</style>
@@ -54,13 +56,13 @@ export default async function ProjectPage({ params }) {
       <BackgroundScene />
 
       {/* Ambient gradient orbs */}
-      <div style={{
+      <div className="ambient-orb" style={{
         position: 'fixed', top: '10%', left: '-15%', width: '600px', height: '600px',
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(255,107,61,0.15) 0%, transparent 70%)',
         filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
       }} />
-      <div style={{
+      <div className="ambient-orb" style={{
         position: 'fixed', bottom: '5%', right: '-15%', width: '700px', height: '700px',
         borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(91,158,255,0.12) 0%, transparent 70%)',
@@ -74,14 +76,14 @@ export default async function ProjectPage({ params }) {
         opacity: 0.05, pointerEvents: 'none', zIndex: 1, mixBlendMode: 'overlay',
       }} />
 
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
+      <div className="page-container" style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
         <Nav linkPrefix="/" />
 
-        <main style={{ padding: '60px 0 140px', maxWidth: '900px' }}>
+        <main className="project-detail-main" style={{ padding: '60px 0 140px', maxWidth: '900px' }}>
           <Reveal>
             <Link
               href="/#projects"
-              className="hover-target"
+              className="hover-target project-detail-back"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                 color: 'rgba(245,241,234,0.7)', fontSize: '14px',
@@ -93,7 +95,7 @@ export default async function ProjectPage({ params }) {
           </Reveal>
 
           <Reveal delay={0.05}>
-            <div style={{
+            <div className="project-detail-num" style={{
               fontFamily: "'Instrument Serif', serif", fontSize: '96px',
               color: '#ff6b3d', lineHeight: 1, marginBottom: '12px',
             }}>{project.num}</div>
@@ -108,7 +110,7 @@ export default async function ProjectPage({ params }) {
 
           <Reveal delay={0.15}>
             <h1 className="glow" style={{
-              fontSize: 'clamp(40px, 6vw, 72px)', fontWeight: 500,
+              fontSize: 'clamp(32px, 6vw, 72px)', fontWeight: 500,
               letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '40px',
             }}>
               {project.title.includes('—') ? (
