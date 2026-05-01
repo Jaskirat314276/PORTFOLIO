@@ -125,6 +125,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .ambient-orb { display: none !important; }
 }
 
+/* Loader: hide HUD side panels below 1100px so they don't overlap the scene */
+@media (max-width: 1100px) {
+  .loader-vitals-left, .loader-vitals-right { display: none !important; }
+}
+
 /* Small mobile */
 @media (max-width: 480px) {
   .page-container { padding: 0 16px !important; }
