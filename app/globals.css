@@ -44,12 +44,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 @media (max-width: 1024px) {
   .page-container { padding: 0 24px !important; }
   .hero-grid {
-    grid-template-columns: 1fr !important;
-    gap: 32px !important;
-    padding: 60px 0 80px !important;
+    padding: 60px 0 48px !important;
     min-height: auto !important;
   }
-  .hero-3d { height: 420px !important; }
   .about-grid {
     grid-template-columns: 1fr !important;
     gap: 32px !important;
@@ -68,8 +65,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .section { padding: 72px 0 !important; }
   .contact-section { padding: 96px 0 64px !important; }
 
-  .hero-grid { padding: 32px 0 56px !important; gap: 24px !important; }
-  .hero-3d { height: 320px !important; }
+  .hero-grid { padding: 32px 0 40px !important; }
+  .scroll-cue { margin-top: 40px !important; }
+  .marquee { padding: 14px 0 !important; }
+  .marquee span span { font-size: 18px !important; padding: 0 18px !important; }
   .hero-eyebrow { font-size: 13px !important; margin-bottom: 20px !important; }
   .hero-paragraph { font-size: 16px !important; margin-bottom: 28px !important; }
   .hero-cta-row { gap: 12px !important; }
@@ -133,7 +132,6 @@ html, body { max-width: 100%; overflow-x: hidden; }
 /* Small mobile */
 @media (max-width: 480px) {
   .page-container { padding: 0 16px !important; }
-  .hero-3d { height: 260px !important; }
   .hero-cta, .resume-button { padding: 12px 20px !important; font-size: 13px !important; }
   .nav-cta-label { display: none !important; }
   .nav-cta { padding: 8px !important; }
