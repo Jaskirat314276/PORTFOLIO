@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import * as THREE from 'three';
 import { projects } from './projects/data';
 import Nav from './components/Nav';
 import CustomCursor from './components/CustomCursor';
@@ -9,7 +10,6 @@ import BackgroundScene from './components/BackgroundScene';
 import Magnetic from './components/Magnetic';
 import Reveal from './components/Reveal';
 import TiltCard from './components/TiltCard';
-import ScrollRunner from './components/ScrollRunner';
 import {
   Github, Linkedin, Mail, ArrowUpRight, Download, Phone, MapPin,
   Code2, Database, Cloud, Cpu, Zap, Brain, Award, GraduationCap,
@@ -90,6 +90,157 @@ const ResumeDropdown = () => {
   );
 };
 
+
+// ============================================================
+// 3D HERO — Icosahedron with edges, particles, chromatic glow
+// ============================================================
+const HeroScene = () => {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const w = mount.clientWidth;
+    const h = mount.clientHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    mount.appendChild(renderer.domElement);
+
+    // Main icosahedron — slightly translucent
+    const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
+    const icoMat = new THREE.MeshStandardMaterial({
+      color: 0xff6b3d,
+      metalness: 0.7,
+      roughness: 0.2,
+      flatShading: true,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const ico = new THREE.Mesh(icoGeo, icoMat);
+    scene.add(ico);
+
+    // Edge lines for that wireframe-on-solid look
+    const edges = new THREE.EdgesGeometry(icoGeo);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    scene.add(wireframe);
+
+    // Outer wireframe sphere
+    const outerGeo = new THREE.IcosahedronGeometry(2.5, 1);
+    const outerEdges = new THREE.EdgesGeometry(outerGeo);
+    const outerMat = new THREE.LineBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.2 });
+    const outerWire = new THREE.LineSegments(outerEdges, outerMat);
+    scene.add(outerWire);
+
+    // Particle galaxy
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 800;
+    const positions = new Float32Array(pCount * 3);
+    const colors = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount; i++) {
+      const r = 3 + Math.random() * 4;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+      const mix = Math.random();
+      colors[i * 3] = 1 * mix + 0.3 * (1 - mix);
+      colors[i * 3 + 1] = 0.4 * mix + 0.6 * (1 - mix);
+      colors[i * 3 + 2] = 0.2 * mix + 1 * (1 - mix);
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    pGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const pMat = new THREE.PointsMaterial({
+      size: 0.03, transparent: true, opacity: 0.7, vertexColors: true, blending: THREE.AdditiveBlending,
+    });
+    const particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const l1 = new THREE.PointLight(0xff6b3d, 5, 15);
+    l1.position.set(3, 3, 3);
+    scene.add(l1);
+    const l2 = new THREE.PointLight(0x5b9eff, 3, 15);
+    l2.position.set(-3, -2, 2);
+    scene.add(l2);
+    const l3 = new THREE.PointLight(0xffffff, 1.5, 15);
+    l3.position.set(0, 4, -3);
+    scene.add(l3);
+
+    // Mouse parallax
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    const onMove = (e) => {
+      const rect = mount.getBoundingClientRect();
+      mouse.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      mouse.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    };
+    mount.addEventListener('mousemove', onMove);
+
+    let frameId;
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const t = clock.getElapsedTime();
+      mouse.x += (mouse.tx - mouse.x) * 0.05;
+      mouse.y += (mouse.ty - mouse.y) * 0.05;
+
+      ico.rotation.x = t * 0.2 + mouse.y * 0.5;
+      ico.rotation.y = t * 0.3 + mouse.x * 0.5;
+      wireframe.rotation.copy(ico.rotation);
+
+      outerWire.rotation.x = -t * 0.1;
+      outerWire.rotation.y = t * 0.15;
+
+      particles.rotation.y = t * 0.05;
+      particles.rotation.x = t * 0.03;
+
+      // Pulsate scale
+      const s = 1 + Math.sin(t * 1.5) * 0.03;
+      ico.scale.set(s, s, s);
+      wireframe.scale.set(s, s, s);
+
+      renderer.render(scene, camera);
+      frameId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    const onResize = () => {
+      const nw = mount.clientWidth;
+      const nh = mount.clientHeight;
+      if (nw === 0 || nh === 0) return;
+      camera.aspect = nw / nh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nw, nh, false);
+    };
+    window.addEventListener('resize', onResize);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(mount);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', onResize);
+      if (ro) ro.disconnect();
+      mount.removeEventListener('mousemove', onMove);
+      mount.removeChild(renderer.domElement);
+      icoGeo.dispose(); icoMat.dispose(); edges.dispose(); lineMat.dispose();
+      outerGeo.dispose(); outerEdges.dispose(); outerMat.dispose();
+      pGeo.dispose(); pMat.dispose(); renderer.dispose();
+    };
+  }, []);
+
+  return <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />;
+};
 
 // ============================================================
 // MAGNETIC BUTTON — Pulls toward cursor on hover
@@ -260,20 +411,9 @@ export default function Portfolio() {
         }
         a { color: inherit; text-decoration: none; }
         .glow { text-shadow: 0 0 60px rgba(255, 107, 61, 0.4); }
-        @keyframes cue-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(6px); }
-        }
-        @keyframes marquee-scroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
       `}</style>
 
       <CustomCursor />
-
-      {/* Scroll-progress runner */}
-      <ScrollRunner />
 
       {/* 3D ambient background */}
       <BackgroundScene />
@@ -306,91 +446,58 @@ export default function Portfolio() {
 
         {/* HERO */}
         <section className="hero-grid" style={{
-          display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: '80px 0 60px', minHeight: '90vh', position: 'relative',
+          display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px',
+          alignItems: 'center', padding: '80px 0 120px', minHeight: '90vh',
         }}>
-          <Reveal>
-            <div className="hero-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px',
-            }}>
-              <span style={{ width: '32px', height: '1px', background: '#ff6b3d' }} />
-              Available for Opportunities · 2026
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h1 className="hero-h1" style={{
-              fontSize: 'clamp(48px, 10vw, 140px)', lineHeight: 0.95,
-              letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '40px',
-            }}>
-              Hi, I'm <span className="glow" style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>Jaskirat Singh</span><br />
-              — I build <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                background: 'linear-gradient(90deg, #ff6b3d, #a855f7, #5b9eff)',
-                WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-              }}>things</span>.
-            </h1>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <p className="hero-paragraph" style={{
-              fontSize: '18px', color: 'rgba(245,241,234,0.7)',
-              maxWidth: '620px', marginBottom: '40px', lineHeight: 1.6,
-            }}>
-              Final-year B.Tech student in Electrical & Electronics Engineering at BIT Mesra, with hands-on experience as a Software Developer Intern. I work across full-stack web, AI/ML, and power electronics.
-            </p>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <div className="hero-cta-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <Magnetic>
-                <a href="#projects" className="hero-cta" style={{
-                  padding: '14px 28px', background: '#f5f1ea', color: '#08080a',
-                  borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                }}>
-                  See my work <ArrowUpRight size={16} />
-                </a>
-              </Magnetic>
-              <ResumeDropdown />
-            </div>
-          </Reveal>
-          {/* Scroll cue */}
-          <Reveal delay={0.5}>
-            <a href="#about" className="scroll-cue" style={{
-              display: 'inline-flex', alignItems: 'center', gap: '10px',
-              marginTop: '72px', fontSize: '12px', letterSpacing: '0.25em',
-              textTransform: 'uppercase', color: 'rgba(245,241,234,0.45)',
-            }}>
-              <ChevronDown size={16} style={{ color: '#ff6b3d', animation: 'cue-bounce 1.6s ease-in-out infinite' }} />
-              Scroll — the little guy runs with you
-            </a>
-          </Reveal>
-        </section>
-
-        {/* MARQUEE STRIP */}
-        <div className="marquee" style={{
-          overflow: 'hidden', whiteSpace: 'nowrap', padding: '20px 0',
-          borderTop: '1px solid rgba(245,241,234,0.08)',
-          borderBottom: '1px solid rgba(245,241,234,0.08)',
-          maskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
-          WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
-        }}>
-          <div style={{ display: 'inline-block', animation: 'marquee-scroll 28s linear infinite' }}>
-            {[0, 1].map((copy) => (
-              <span key={copy} aria-hidden={copy === 1}>
-                {['Full-Stack Web', 'AI / ML', 'RAG & LLMs', 'React / Next.js', 'Data Analytics', 'Power Electronics', 'EV Powertrain', 'Open to Work'].map((item) => (
-                  <span key={item} style={{
-                    fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-                    fontSize: '24px', color: 'rgba(245,241,234,0.55)', padding: '0 28px',
+          <div>
+            <Reveal>
+              <div className="hero-eyebrow" style={{
+                fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: '#ff6b3d', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px',
+              }}>
+                <span style={{ width: '32px', height: '1px', background: '#ff6b3d' }} />
+                Available for Opportunities · 2026
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <h1 className="hero-h1" style={{
+                fontSize: 'clamp(40px, 7vw, 96px)', lineHeight: 0.95,
+                letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '32px',
+              }}>
+                Hi, I'm<br />
+                <span className="glow" style={{
+                  fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
+                }}>Jaskirat Singh</span><br />
+                — I build things.
+              </h1>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <p className="hero-paragraph" style={{
+                fontSize: '18px', color: 'rgba(245,241,234,0.7)',
+                maxWidth: '520px', marginBottom: '40px', lineHeight: 1.6,
+              }}>
+                Final-year B.Tech student in Electrical & Electronics Engineering at BIT Mesra, with hands-on experience as a Software Developer Intern. I work across full-stack web, AI/ML, and power electronics.
+              </p>
+            </Reveal>
+            <Reveal delay={0.3}>
+              <div className="hero-cta-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <Magnetic>
+                  <a href="#projects" className="hero-cta" style={{
+                    padding: '14px 28px', background: '#f5f1ea', color: '#08080a',
+                    borderRadius: '999px', fontSize: '14px', fontWeight: 500,
+                    display: 'flex', alignItems: 'center', gap: '8px',
                   }}>
-                    {item} <span style={{ color: '#ff6b3d' }}>✦</span>
-                  </span>
-                ))}
-              </span>
-            ))}
+                    See my work <ArrowUpRight size={16} />
+                  </a>
+                </Magnetic>
+                <ResumeDropdown />
+              </div>
+            </Reveal>
           </div>
-        </div>
+          <div className="hero-3d" style={{ height: '550px', width: '100%' }}>
+            <HeroScene />
+          </div>
+        </section>
 
         {/* ABOUT + STATS */}
         <section id="about" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
@@ -822,7 +929,7 @@ export default function Portfolio() {
 
         {/* FOOTER */}
         <footer className="footer" style={{
-          padding: '32px 0 72px', borderTop: '1px solid rgba(245,241,234,0.08)',
+          padding: '32px 0', borderTop: '1px solid rgba(245,241,234,0.08)',
           display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
           color: 'rgba(245,241,234,0.4)', fontSize: '13px',
         }}>
