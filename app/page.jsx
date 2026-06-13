@@ -142,6 +142,27 @@ const HeroScene = () => {
     const outerWire = new THREE.LineSegments(outerEdges, outerMat);
     scene.add(outerWire);
 
+    // Tilted orbital rings — adds planetary depth around the core
+    const ringGeo = new THREE.TorusGeometry(2.1, 0.012, 16, 140);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6b3d, transparent: true, opacity: 0.55 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI * 0.42;
+    scene.add(ring);
+
+    const ring2Geo = new THREE.TorusGeometry(2.1, 0.009, 16, 140);
+    const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.35 });
+    const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
+    ring2.rotation.x = Math.PI * 0.42;
+    ring2.rotation.y = Math.PI * 0.5;
+    scene.add(ring2);
+
+    // Inner counter-rotating core that pulses with the icosahedron
+    const coreGeo = new THREE.OctahedronGeometry(0.55, 0);
+    const coreEdges = new THREE.EdgesGeometry(coreGeo);
+    const coreMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 });
+    const core = new THREE.LineSegments(coreEdges, coreMat);
+    scene.add(core);
+
     // Particle galaxy
     const pGeo = new THREE.BufferGeometry();
     const pCount = 800;
@@ -205,6 +226,16 @@ const HeroScene = () => {
       particles.rotation.y = t * 0.05;
       particles.rotation.x = t * 0.03;
 
+      // Orbital rings spin on their own axes
+      ring.rotation.z = t * 0.3;
+      ring2.rotation.z = -t * 0.25;
+
+      // Inner core counter-rotates and pulses
+      core.rotation.x = -t * 0.5;
+      core.rotation.y = -t * 0.4;
+      const cs = 1 + Math.sin(t * 2) * 0.1;
+      core.scale.set(cs, cs, cs);
+
       // Pulsate scale
       const s = 1 + Math.sin(t * 1.5) * 0.03;
       ico.scale.set(s, s, s);
@@ -235,6 +266,8 @@ const HeroScene = () => {
       mount.removeChild(renderer.domElement);
       icoGeo.dispose(); icoMat.dispose(); edges.dispose(); lineMat.dispose();
       outerGeo.dispose(); outerEdges.dispose(); outerMat.dispose();
+      ringGeo.dispose(); ringMat.dispose(); ring2Geo.dispose(); ring2Mat.dispose();
+      coreGeo.dispose(); coreEdges.dispose(); coreMat.dispose();
       pGeo.dispose(); pMat.dispose(); renderer.dispose();
     };
   }, []);
@@ -276,9 +309,52 @@ const CountUp = ({ end, suffix = '' }) => {
 };
 
 // ============================================================
+// SECTION EYEBROW — numbered editorial label (01 — About me)
+// ============================================================
+const SectionEyebrow = ({ index, children }) => (
+  <div className="section-eyebrow" style={{
+    fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
+    color: '#ff6b3d', marginBottom: '24px',
+    display: 'flex', alignItems: 'center', gap: '14px',
+  }}>
+    <span style={{
+      fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
+      fontSize: '24px', letterSpacing: 'normal', textTransform: 'none',
+      opacity: 0.65,
+    }}>{index}</span>
+    <span style={{ width: '28px', height: '1px', background: '#ff6b3d', opacity: 0.5 }} />
+    {children}
+  </div>
+);
+
+// ============================================================
+// MARQUEE — continuously scrolling tech ticker (hover to pause)
+// ============================================================
+const Marquee = ({ items, reverse = false }) => {
+  const loop = [...items, ...items];
+  return (
+    <div className={`marquee${reverse ? ' reverse' : ''}`} aria-hidden="true">
+      <span>
+        {loop.map((it, i) => (
+          <span key={i} className={i % 3 === 1 ? 'accent' : undefined}>
+            {it}<span style={{ opacity: 0.3, padding: '0 4px' }}>✦</span>
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+};
+
+// ============================================================
 // MAIN PORTFOLIO
 // ============================================================
 export default function Portfolio() {
+  const marqueeItems = [
+    'React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'LangChain',
+    'RAG', 'Power Electronics', 'Three.js', 'SQL', 'Docker', 'C++',
+    'AI / ML', 'Tailwind', 'Power BI', 'IoT',
+  ];
+
   const stats = [
     { value: 6, suffix: '+', label: 'Projects Built', icon: <FolderGit2 size={20} /> },
     { value: 300, suffix: '+', label: 'LeetCode Problems', icon: <Code2 size={20} /> },
@@ -499,13 +575,24 @@ export default function Portfolio() {
           </div>
         </section>
 
+        {/* SCROLL CUE */}
+        <div className="scroll-cue" style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: '10px', marginBottom: '24px', color: 'rgba(245,241,234,0.4)',
+        }}>
+          <span style={{ fontSize: '11px', letterSpacing: '0.32em', textTransform: 'uppercase' }}>
+            Scroll to explore
+          </span>
+          <ChevronDown size={18} className="scroll-cue-chevron" style={{ color: '#ff6b3d' }} />
+        </div>
+
+        {/* TECH MARQUEE */}
+        <Marquee items={marqueeItems} />
+
         {/* ABOUT + STATS */}
         <section id="about" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— About me</div>
+            <SectionEyebrow index="01">About me</SectionEyebrow>
           </Reveal>
           <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start', marginBottom: '80px' }}>
             <Reveal delay={0.1}>
@@ -573,10 +660,7 @@ export default function Portfolio() {
         {/* SKILLS */}
         <section id="skills" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Skills & Tools</div>
+            <SectionEyebrow index="02">Skills &amp; Tools</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="section-h2" style={{
@@ -628,10 +712,7 @@ export default function Portfolio() {
         {/* EXPERIENCE */}
         <section id="experience" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Experience</div>
+            <SectionEyebrow index="03">Experience</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="section-h2" style={{
@@ -704,10 +785,7 @@ export default function Portfolio() {
         {/* PROJECTS */}
         <section id="projects" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Selected work</div>
+            <SectionEyebrow index="04">Selected work</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="section-h2" style={{
@@ -770,10 +848,7 @@ export default function Portfolio() {
         {/* ACHIEVEMENTS */}
         <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Achievements</div>
+            <SectionEyebrow index="05">Achievements</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="section-h2" style={{
@@ -819,10 +894,7 @@ export default function Portfolio() {
         {/* EDUCATION */}
         <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Education</div>
+            <SectionEyebrow index="06">Education</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="section-h2" style={{
@@ -878,10 +950,7 @@ export default function Portfolio() {
         {/* CONTACT */}
         <section id="contact" className="contact-section" style={{ padding: '140px 0 80px', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
           <Reveal>
-            <div className="section-eyebrow" style={{
-              fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: '#ff6b3d', marginBottom: '24px',
-            }}>— Get in touch</div>
+            <SectionEyebrow index="07">Get in touch</SectionEyebrow>
           </Reveal>
           <Reveal delay={0.1}>
             <h2 className="glow" style={{
