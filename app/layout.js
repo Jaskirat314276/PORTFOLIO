@@ -22,7 +22,7 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
-const SITE = "https://jaskirat-portfolio.netlify.app";
+const SITE = "https://portfoliojaskirat.netlify.app";
 
 export const metadata = {
   metadataBase: new URL(SITE),
