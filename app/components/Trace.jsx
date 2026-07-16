@@ -35,6 +35,40 @@ export function useScrollProgress(ref, { startAt = 0.85, endAt = 0.35 } = {}) {
   return p;
 }
 
+// Discrete count of thresholds the progress has passed. Unlike
+// useScrollProgress this only re-renders on a crossing (≤ thresholds.length
+// times per direction), so it's safe to consume high in the tree.
+export function useThresholdCount(ref, thresholds, { startAt = 0.85, endAt = 0.35 } = {}) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const startY = startAt * vh;
+      const total = r.height + (startAt - endAt) * vh;
+      const traveled = startY - r.top;
+      const p = total > 0 ? Math.max(0, Math.min(1, traveled / total)) : 0;
+      let next = 0;
+      for (const t of thresholds) if (p >= t) next++;
+      setCount((prev) => (prev === next ? prev : next));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [ref, startAt, endAt, thresholds]);
+  return count;
+}
+
 // A single vertical connector trace that draws with scroll — used for
 // the hero cue drop and the achievements→now-building pass-through.
 export function VerticalTrace({ height = 120, className = '', dotTop = false }) {

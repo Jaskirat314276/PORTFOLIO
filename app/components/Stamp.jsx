@@ -32,7 +32,6 @@ export default function Stamp({ children, delay = 0.2, active, className = '', s
       ref={ref}
       className={`stamp stamp-in ${on ? 'in' : ''} ${className}`}
       style={{ transitionDelay: `${delay}s`, ...style }}
-      aria-hidden="true"
     >
       {children}
     </span>

@@ -29,7 +29,7 @@ export function ConvergeBand() {
         gap: 'clamp(12px, 2.4vw, 30px)', whiteSpace: 'nowrap',
       }}>
         <span className="serif" style={{
-          fontSize: 'clamp(32px, 6.5vw, 92px)', lineHeight: 1, color: 'var(--text)',
+          fontSize: 'clamp(26px, 6.5vw, 92px)', lineHeight: 1, color: 'var(--text)',
           display: 'inline-block',
           transform: `translateX(${-off * 22}vw)`,
           opacity: 0.25 + (1 - off) * 0.75,
@@ -49,7 +49,7 @@ export function ConvergeBand() {
         </span>
 
         <span className="serif" style={{
-          fontSize: 'clamp(32px, 6.5vw, 92px)', lineHeight: 1, fontStyle: 'italic', color: 'var(--accent)',
+          fontSize: 'clamp(26px, 6.5vw, 92px)', lineHeight: 1, fontStyle: 'italic', color: 'var(--accent)',
           display: 'inline-block',
           transform: `translateX(${off * 22}vw)`,
           opacity: 0.25 + (1 - off) * 0.75,

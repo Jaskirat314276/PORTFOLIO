@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { projects } from './projects/data';
 import Nav from './components/Nav';
-import BackgroundScene from './components/BackgroundScene';
+
+// three.js stays out of the initial bundle; the scene mounts only after
+// the boot loader hands off, so exactly ONE WebGL context exists at a time
+const BackgroundScene = dynamic(() => import('./components/BackgroundScene'), { ssr: false });
 import TiltCard from './components/TiltCard';
 import GlowField from './components/GlowField';
 import GrainOverlay from './components/GrainOverlay';
@@ -20,7 +24,7 @@ import SlideDock from './components/SlideDock';
 import Spark from './components/Spark';
 import Stamp from './components/Stamp';
 import VelocityMarquee from './components/VelocityMarquee';
-import { VerticalTrace, IntersectionBeat, useScrollProgress } from './components/Trace';
+import { VerticalTrace, IntersectionBeat, useScrollProgress, useThresholdCount } from './components/Trace';
 import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/ScrollBands';
 import { RAIL_THRESHOLDS } from './lib/motion';
 import { useReducedMotion } from './lib/useReducedMotion';
@@ -141,6 +145,62 @@ const FooterLed = () => {
 const STAMPS = ['FLAGSHIP · 2026', 'SHIPPED', 'LIVE DEMO', 'LIVE DEMO', 'HARDWARE · 300V TESTED', 'SIMULATION'];
 const PIN_TOPS = ['26%', '44%', '62%', '80%'];
 
+// ── scroll-scrubbed leaves ──────────────────────────────────
+// These own their own useScrollProgress so per-frame progress state
+// re-renders only this tiny subtree, never the whole page.
+
+const ExpSpine = ({ targetRef, reduced }) => {
+  const p = useScrollProgress(targetRef, { startAt: 0.85, endAt: 0.35 });
+  return (
+    <svg
+      aria-hidden="true"
+      style={{ position: 'absolute', left: 10, top: 0, width: 2, height: '100%', overflow: 'visible' }}
+      viewBox="0 0 2 100"
+      preserveAspectRatio="none"
+    >
+      <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
+      <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - p} />
+    </svg>
+  );
+};
+
+const RailSpine = ({ targetRef, reduced }) => {
+  const p = useScrollProgress(targetRef, { startAt: 0.8, endAt: 0.25 });
+  useEffect(() => { window.__traceProgress = p; }, [p]);
+  return (
+    <>
+      <svg className="rail-spine" aria-hidden="true" viewBox="0 0 2 100" preserveAspectRatio="none">
+        <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
+        <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - p} />
+      </svg>
+      {!reduced && <span className="rail-pulse" style={{ top: `${p * 100}%` }} aria-hidden="true" />}
+    </>
+  );
+};
+
+const RailHud = ({ targetRef }) => {
+  const p = useScrollProgress(targetRef, { startAt: 0.8, endAt: 0.25 });
+  const litCount = RAIL_THRESHOLDS.filter((t) => p >= t).length;
+  const hudFile = Math.max(1, Math.min(projects.length, litCount || 1));
+  return (
+    <div className="rail-hud" aria-hidden="true">
+      <span
+        className="mono"
+        style={{
+          fontSize: 10, letterSpacing: '0.16em', color: 'var(--text-dim)',
+          background: 'rgba(16,16,19,0.85)', backdropFilter: 'blur(8px)',
+          border: '1px solid var(--border)', borderRadius: 6, padding: '7px 12px',
+        }}
+      >
+        <span key={hudFile} className="hud-pop">
+          FILE {String(hudFile).padStart(2, '0')}/{String(projects.length).padStart(2, '0')} — {projects[hudFile - 1].title.split(' — ')[0]}
+        </span>
+        {' '}· {String(Math.round(p * 100)).padStart(3, '0')}%
+      </span>
+    </div>
+  );
+};
+
 // ============================================================
 // MAIN PORTFOLIO — THE TRACE
 // ============================================================
@@ -157,20 +217,16 @@ export default function Portfolio() {
     return () => { window.removeEventListener('js:boot-done', on); clearTimeout(t); };
   }, []);
 
-  // experience spine + project rail scroll scrub
+  // experience spine + project rail live in scrubbed leaf components;
+  // the page only tracks the DISCRETE lit count (≤6 re-renders per pass)
   const expRef = useRef(null);
-  const expP = useScrollProgress(expRef, { startAt: 0.85, endAt: 0.35 });
   const railRef = useRef(null);
-  const railP = useScrollProgress(railRef, { startAt: 0.8, endAt: 0.25 });
-  useEffect(() => { window.__traceProgress = railP; }, [railP]);
+  const litCount = useThresholdCount(railRef, RAIL_THRESHOLDS, { startAt: 0.8, endAt: 0.25 });
 
   const [expDocked, setExpDocked] = useState([false, false, false]);
   const [railDocked, setRailDocked] = useState(() => projects.map(() => false));
   const dockExp = (i) => setExpDocked((a) => a.map((v, j) => (j === i ? true : v)));
   const dockRail = (i) => setRailDocked((a) => a.map((v, j) => (j === i ? true : v)));
-
-  const litCount = RAIL_THRESHOLDS.filter((t) => railP >= t).length;
-  const hudFile = Math.max(1, Math.min(projects.length, litCount || 1));
 
   const stats = [
     { value: 6, suffix: '+', label: 'Projects Built', icon: <FolderGit2 size={20} /> },
@@ -252,8 +308,9 @@ export default function Portfolio() {
 
   return (
     <div className="page">
-      {/* always-on ambient 3D — floating polyhedra, rings, starfield */}
-      <BackgroundScene />
+      {/* ambient 3D — mounts after the boot loader hands off, so the
+          loader's voxel scene is the only WebGL context during boot */}
+      {heroIn && <BackgroundScene />}
       <GlowField />
       <GrainOverlay />
       <ScrollProgress />
@@ -273,7 +330,11 @@ export default function Portfolio() {
             <span className="led" />
             <ScrambleText text="AVAILABLE FOR OPPORTUNITIES · 2026" />
           </div>
-          <h1 className="head head-xl" style={{ fontSize: 'clamp(48px, 9.5vw, 138px)', marginBottom: 36, maxWidth: 1100 }}>
+          <h1
+            className="head head-xl"
+            aria-label="Hi, I'm Jaskirat Singh — I build things."
+            style={{ fontSize: 'clamp(48px, 9.5vw, 138px)', marginBottom: 36, maxWidth: 1100 }}
+          >
             <ScatterText
               active={heroIn}
               delay={0.05}
@@ -435,15 +496,7 @@ export default function Portfolio() {
             </div>
             <div ref={expRef} style={{ position: 'relative', paddingLeft: 46 }}>
               {/* the spine — draws with scroll */}
-              <svg
-                aria-hidden="true"
-                style={{ position: 'absolute', left: 10, top: 0, width: 2, height: '100%', overflow: 'visible' }}
-                viewBox="0 0 2 100"
-                preserveAspectRatio="none"
-              >
-                <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
-                <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - expP} />
-              </svg>
+              <ExpSpine targetRef={expRef} reduced={reduced} />
               <div style={{ display: 'grid', gap: 22 }}>
                 {experience.map((e, i) => (
                   <div key={e.company} style={{ position: 'relative' }}>
@@ -520,35 +573,15 @@ export default function Portfolio() {
             </div>
 
             {/* mono HUD ticks FILE 0X/06 */}
-            {!reduced && (
-              <div className="rail-hud" aria-hidden="true">
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 10, letterSpacing: '0.16em', color: 'var(--text-dim)',
-                    background: 'rgba(16,16,19,0.85)', backdropFilter: 'blur(8px)',
-                    border: '1px solid var(--border)', borderRadius: 6, padding: '7px 12px',
-                  }}
-                >
-                  <span key={hudFile} className="hud-pop">
-                    FILE {String(hudFile).padStart(2, '0')}/{String(projects.length).padStart(2, '0')} — {projects[hudFile - 1].title.split(' — ')[0]}
-                  </span>
-                  {' '}· {String(Math.round(railP * 100)).padStart(3, '0')}%
-                </span>
-              </div>
-            )}
+            {!reduced && <RailHud targetRef={railRef} />}
 
             <div ref={railRef} className="rail-track" style={{ position: 'relative', padding: '30px 0' }}>
               {/* the rail — draws with scroll, pulse rides it */}
-              <svg className="rail-spine" aria-hidden="true" viewBox="0 0 2 100" preserveAspectRatio="none">
-                <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
-                <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - railP} />
-              </svg>
-              {!reduced && <span className="rail-pulse" style={{ top: `${railP * 100}%` }} aria-hidden="true" />}
+              <RailSpine targetRef={railRef} reduced={reduced} />
 
               {projects.map((p, i) => {
                 const fromLeft = i % 2 === 0;
-                const lit = reduced || railP >= RAIL_THRESHOLDS[i];
+                const lit = reduced || litCount > i;
                 const desc = p.slug === 'warehouse-optimizer' ? `${p.desc.split('. ')[0]}.` : p.desc;
                 return (
                   <div
@@ -647,7 +680,7 @@ export default function Portfolio() {
             <div style={{ display: 'grid', gap: 18 }}>
               {education.map((ed, i) => (
                 <Reveal key={ed.school} delay={i * 0.08}>
-                  <div className="card" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 24, alignItems: 'center' }}>
+                  <div className="card edu-card" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 24, alignItems: 'center' }}>
                     <div style={{
                       width: 50, height: 50, borderRadius: 13,
                       background: 'var(--accent-soft)', color: 'var(--accent)',
@@ -659,7 +692,7 @@ export default function Portfolio() {
                       <p style={{ fontSize: 14.5, color: 'var(--accent)', marginBottom: 3 }}>{ed.school}</p>
                       <p className="mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ed.date} · {ed.location}</p>
                     </div>
-                    <span className="serif" style={{ fontSize: 23, whiteSpace: 'nowrap' }}>{ed.grade}</span>
+                    <span className="serif edu-grade" style={{ fontSize: 23, whiteSpace: 'nowrap' }}>{ed.grade}</span>
                   </div>
                 </Reveal>
               ))}
@@ -697,7 +730,7 @@ export default function Portfolio() {
                     animation: 'scan-sheen 2.8s linear infinite',
                   }} />
                 </span>
-                <h3 className="serif" style={{ fontSize: 'clamp(24px, 3.2vw, 36px)', marginBottom: 12, paddingRight: 130 }}>
+                <h3 className="serif nowb-head" style={{ fontSize: 'clamp(24px, 3.2vw, 36px)', marginBottom: 12, paddingRight: 130 }}>
                   Now building: <span className="ital">HireFlow AI</span> — a job-outreach copilot.
                 </h3>
                 <p style={{ fontSize: 15.5, color: 'var(--text-dim)', maxWidth: 640, lineHeight: 1.65, marginBottom: 16 }}>

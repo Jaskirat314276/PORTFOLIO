@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '../lib/useReducedMotion';
 
-const GLYPHS = '▓▒░#$%&/=+*';
+// ASCII only — block glyphs (▓▒░) fall back to a system font with wider
+// advances, making the chip jitter in width mid-decrypt
+const GLYPHS = '#$%&/=+*<>';
 
 // Mono decrypt-from-glyph-soup. Fires once when scrolled into view.
 export default function ScrambleText({ text, duration = 900, className, style }) {

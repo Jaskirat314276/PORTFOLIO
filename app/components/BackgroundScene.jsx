@@ -160,6 +160,7 @@ export default function BackgroundScene() {
       starGeo.dispose(); starMat.dispose();
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
       renderer.dispose();
+      renderer.forceContextLoss();
     };
   }, []);
 

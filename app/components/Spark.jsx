@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useReducedMotion } from '../lib/useReducedMotion';
 
 // 6-particle spark burst — fires once when `fire` flips true (a card
 // docking onto the trace). Pure transform/opacity, aria-hidden.
 export default function Spark({ fire, color = 'var(--accent)', style }) {
   const [burst, setBurst] = useState(0);
+  const reduced = useReducedMotion();
   useEffect(() => { if (fire) setBurst((b) => b + 1); }, [fire]);
-  if (!burst) return null;
+  if (!burst || reduced) return null;
   return (
     <span key={burst} aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, zIndex: 6, ...style }}>
       {Array.from({ length: 6 }, (_, i) => {

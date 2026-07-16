@@ -102,11 +102,9 @@ button { font-family: inherit; }
   line-height: 0.94;
   letter-spacing: -0.03em;
 }
-.head-xl .ital { animation: head-glow 4.5s ease-in-out infinite; }
-@keyframes head-glow {
-  0%, 100% { text-shadow: 0 0 55px rgba(255, 107, 61, 0.35); }
-  50% { text-shadow: 0 0 95px rgba(255, 107, 61, 0.6); }
-}
+/* static glow — animating text-shadow on a giant headline repaints a
+   huge area every frame for the page's whole lifetime */
+.head-xl .ital { text-shadow: 0 0 60px rgba(255, 107, 61, 0.45); }
 
 /* Mono eyebrow chip ----------------------------------------- */
 .eyebrow {
@@ -153,9 +151,9 @@ button { font-family: inherit; }
    ============================================================ */
 .card {
   position: relative;
+  /* no backdrop-filter here: ~20 blurred cards compositing against the
+     live WebGL canvas is a frame killer, and the gradient hides it anyway */
   background: linear-gradient(135deg, rgba(245, 241, 234, 0.045) 0%, rgba(245, 241, 234, 0.012) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: 18px;
   transition: border-color 0.35s var(--ease-expo),
@@ -186,11 +184,12 @@ button { font-family: inherit; }
   content: ""; position: absolute; top: 0; left: -130%;
   width: 60%; height: 100%;
   background: linear-gradient(100deg, transparent, rgba(245, 241, 234, 0.09), transparent);
-  transform: skewX(-18deg);
-  transition: left 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(0) skewX(-18deg);
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none; z-index: 3;
 }
-.card:not(.ic-card):hover::after, .paper:hover::after { left: 150%; }
+/* 280% of the card = ~467% of the sweep's own 60% width */
+.card:not(.ic-card):hover::after, .paper:hover::after { transform: translateX(467%) skewX(-18deg); }
 
 /* Chips ----------------------------------------------------- */
 .chip {
@@ -268,9 +267,10 @@ button { font-family: inherit; }
   fill: none; stroke: var(--accent); stroke-width: 1.5;
   stroke-linecap: round; stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 4px rgba(255, 107, 61, 0.55));
+  /* no drop-shadow filter: these strokes redraw every scroll frame and
+     SVG filters force a full re-render each time (mobile paint killer) */
 }
-.trace-dim { stroke: var(--border-hi); filter: none; }
+.trace-dim { stroke: var(--border-hi); }
 .via {
   fill: var(--bg); stroke: var(--border-hi); stroke-width: 1.5;
   transition: stroke 0.4s ease, fill 0.4s ease;
@@ -484,6 +484,14 @@ button { font-family: inherit; }
   .container { padding: 0 16px; }
 }
 
+@media (max-width: 560px) {
+  /* Now-building headline: badge sits above, not beside */
+  .nowb-head { padding-right: 0 !important; margin-top: 34px; }
+  /* Education card: grade drops below the degree instead of squeezing it */
+  .edu-card { grid-template-columns: auto 1fr !important; }
+  .edu-grade { grid-column: 2; white-space: normal !important; font-size: 20px !important; }
+}
+
 /* ============================================================
    v2 wiring — hero underline, ital, rail, dossiers, paper chips
    ============================================================ */
@@ -573,7 +581,6 @@ section[id] { scroll-margin-top: 80px; }
   .stamp-in { opacity: 1 !important; transform: rotate(var(--rot, -8deg)) !important; }
   .grain { animation: none !important; }
   .marquee-row { animation: none !important; transform: none !important; }
-  .head-xl .ital { animation: none !important; }
   .footer-led.pulsing, .footer-led.rest, .scroll-cue-dot { animation: none !important; }
   .scroll-progress { display: none !important; }
   .cascade .chip, .cascade .mchip, .exp-li { opacity: 1 !important; transform: none !important; }
