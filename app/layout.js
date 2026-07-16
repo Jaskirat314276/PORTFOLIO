@@ -1,6 +1,11 @@
 import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import LoadingGate from "./components/LoadingGate";
+
+// GA4 measurement ID — set NEXT_PUBLIC_GA_ID in Netlify (or hardcode the
+// G-XXXX id here); analytics stays off until an id is present.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -68,6 +73,7 @@ export default function RootLayout({ children }) {
         <a href="#main" className="skip-link">Skip to content</a>
         <LoadingGate>{children}</LoadingGate>
       </body>
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
