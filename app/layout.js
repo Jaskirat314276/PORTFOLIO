@@ -3,9 +3,8 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import LoadingGate from "./components/LoadingGate";
 
-// GA4 measurement ID — set NEXT_PUBLIC_GA_ID in Netlify (or hardcode the
-// G-XXXX id here); analytics stays off until an id is present.
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+// GA4 measurement ID (public by design; env var can override per-deploy)
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-DMKJ8F316E";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
