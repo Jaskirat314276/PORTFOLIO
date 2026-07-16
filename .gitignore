@@ -40,3 +40,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+PORTFOLIO_BUILD_PROMPTS_V3*
