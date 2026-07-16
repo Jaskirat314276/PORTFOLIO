@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Netlify form definitions</title></head>
+  <body>
+    <!-- Build-time form registration for Netlify Forms. The live site's
+         React form POSTs its submissions to this static path. -->
+    <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="company" />
+      <textarea name="message"></textarea>
+    </form>
+  </body>
+</html>

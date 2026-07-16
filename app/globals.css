@@ -463,6 +463,39 @@ button { font-family: inherit; }
 .reveal.in .email-trace { transform: scaleX(1); }
 
 /* ============================================================
+   Contact form (Netlify Forms)
+   ============================================================ */
+.cform { display: grid; gap: 16px; }
+.cform-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .cform-row { grid-template-columns: 1fr; } }
+.cform label { display: grid; gap: 7px; }
+.cform label > span {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.16em; color: var(--text-muted);
+}
+.cform input, .cform textarea {
+  font-family: var(--sans); font-size: 14.5px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; width: 100%;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.cform textarea { resize: vertical; min-height: 96px; }
+.cform input::placeholder, .cform textarea::placeholder { color: var(--text-muted); }
+.cform input:focus, .cform textarea:focus {
+  outline: none; border-color: rgba(255, 107, 61, 0.55);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.cform button {
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 26px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--text); color: var(--bg);
+  font-family: var(--sans); font-size: 14px; font-weight: 500;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.cform button:hover { transform: translateY(-2px); }
+.cform button:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+/* ============================================================
    Debug HUD
    ============================================================ */
 .debug-hud {

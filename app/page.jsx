@@ -24,6 +24,7 @@ import SlideDock from './components/SlideDock';
 import Spark from './components/Spark';
 import Stamp from './components/Stamp';
 import VelocityMarquee from './components/VelocityMarquee';
+import ContactForm from './components/ContactForm';
 import { VerticalTrace, IntersectionBeat, MarginTrace, useScrollProgress, useThresholdCount } from './components/Trace';
 import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/ScrollBands';
 import { RAIL_THRESHOLDS } from './lib/motion';
@@ -877,6 +878,14 @@ export default function Portfolio() {
                 </SlideDock>
               ))}
             </div>
+
+            {/* direct line — Netlify Forms, lands in the dashboard + email */}
+            <Reveal delay={0.1} style={{ marginTop: 64 }}>
+              <div className="eyebrow" style={{ marginBottom: 22 }}>
+                <span className="led" /><ScrambleText text="Or drop a message" />
+              </div>
+              <ContactForm />
+            </Reveal>
           </div>
         </section>
       </main>
