@@ -1,5 +1,6 @@
 import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import "./globals.css";
 import LoadingGate from "./components/LoadingGate";
 
@@ -73,6 +74,9 @@ export default function RootLayout({ children }) {
         <LoadingGate>{children}</LoadingGate>
       </body>
       {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
+      {/* only on Vercel-hosted deploys — its /_vercel/insights endpoint
+          doesn't exist on Netlify and would 404 there */}
+      {process.env.VERCEL && <VercelAnalytics />}
     </html>
   );
 }
