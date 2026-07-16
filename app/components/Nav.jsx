@@ -144,7 +144,7 @@ export default function Nav({ linkPrefix = '', paper = false }) {
               className="nav-cta"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '9px 18px', background: 'var(--accent)', color: '#08080a',
+                padding: '9px 18px', background: 'var(--accent)', color: '#1a1815',
                 borderRadius: 999, fontFamily: 'var(--mono)', fontSize: 11,
                 letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 500,
               }}

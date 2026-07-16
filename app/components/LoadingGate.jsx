@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 const LoaderScene = dynamic(() => import('./LoaderScene'), { ssr: false });
 
 const POST_LOG = [
-  'JS-CORE BOOT v2.0',
+  'JS-CORE BOOT v3.0',
   'PSU OK · 5V RAIL STABLE',
   'CLK 60FPS',
   'LOADING PORTFOLIO…',
@@ -102,7 +102,7 @@ export default function LoadingGate({ children }) {
           style={{
             position: 'fixed', left: 0, top: 0, zIndex: 10001,
             width: 8, height: 8, borderRadius: '50%',
-            background: '#ff6b3d', boxShadow: '0 0 14px #ff6b3d',
+            background: '#d97757', boxShadow: '0 0 14px #d97757',
             transform: `translate(${fly.x - 4}px, ${fly.y - 4}px)`,
             transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
             pointerEvents: 'none',
@@ -114,8 +114,8 @@ export default function LoadingGate({ children }) {
           aria-busy="true"
           aria-live="polite"
           style={{
-            position: 'fixed', inset: 0, zIndex: 9999, background: '#08080a',
-            color: '#f5f1ea', display: 'flex', flexDirection: 'column',
+            position: 'fixed', inset: 0, zIndex: 9999, background: '#1a1815',
+            color: '#f0eee5', display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
             opacity: phase === 'done' ? 0 : 1,
             pointerEvents: phase === 'done' ? 'none' : 'auto',
@@ -126,7 +126,7 @@ export default function LoadingGate({ children }) {
           <div style={{
             position: 'absolute', top: '20%', left: '50%', width: 520, height: 520,
             transform: 'translateX(-50%)', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,107,61,0.16) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(217,119,87,0.16) 0%, transparent 70%)',
             filter: 'blur(80px)', pointerEvents: 'none',
           }} />
 
@@ -180,7 +180,7 @@ export default function LoadingGate({ children }) {
           {/* progress hairline */}
           <div style={{ width: 'min(440px, 82vw)', marginTop: 26, position: 'relative', zIndex: 2 }}>
             <div style={{ height: 2, background: 'var(--border)', borderRadius: 999, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: '100%', transform: `scaleX(${pct / 100})`, transformOrigin: 'left', background: 'linear-gradient(90deg, #ff6b3d, #5b9eff)', boxShadow: '0 0 12px rgba(255,107,61,0.6)', transition: 'transform 0.1s linear' }} />
+              <div style={{ height: '100%', width: '100%', transform: `scaleX(${pct / 100})`, transformOrigin: 'left', background: 'linear-gradient(90deg, #d97757, #a8593c)', boxShadow: '0 0 12px rgba(217,119,87,0.6)', transition: 'transform 0.1s linear' }} />
             </div>
           </div>
         </div>

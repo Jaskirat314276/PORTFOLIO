@@ -35,6 +35,18 @@ export function useScrollProgress(ref, { startAt = 0.85, endAt = 0.35 } = {}) {
   return p;
 }
 
+// POWER-ON LIGHTING: flips data-powered on a target element when the
+// segment's draw progress passes onAt (hysteresis via offAt so it never
+// flickers at the boundary). One attribute toggle — never per-frame styles.
+export function usePower(targetRef, p, { onAt = 0.55, offAt = 0.45 } = {}) {
+  useEffect(() => {
+    const el = targetRef?.current;
+    if (!el) return;
+    if (p >= onAt) el.setAttribute('data-powered', '');
+    else if (p < offAt) el.removeAttribute('data-powered');
+  }, [targetRef, p, onAt, offAt]);
+}
+
 // Discrete count of thresholds the progress has passed. Unlike
 // useScrollProgress this only re-renders on a crossing (≤ thresholds.length
 // times per direction), so it's safe to consume high in the tree.
@@ -107,8 +119,9 @@ export function VerticalTrace({ height = 120, className = '', dotTop = false }) 
 // Left-margin circuit run with 45° jogs, scrubbed to the target's scroll
 // window — the trace's s3 (skills) and s6 (achievements→now-building)
 // pass-through segments.
-export function MarginTrace({ targetRef, reduced = false, startAt = 0.9, endAt = 0.35, style }) {
+export function MarginTrace({ targetRef, powerRef, reduced = false, startAt = 0.9, endAt = 0.35, style }) {
   const p = useScrollProgress(targetRef, { startAt, endAt });
+  usePower(powerRef || targetRef, p);
   const off = reduced ? 0 : 1 - p;
   const d = 'M 30 0 L 30 360 L 12 400 L 12 640 L 30 680 L 30 1000';
   return (
@@ -127,9 +140,10 @@ export function MarginTrace({ targetRef, reduced = false, startAt = 0.9, endAt =
 // THE INTERSECTION BEAT — CODE (from left) × HARDWARE (from right)
 // hairlines draw toward each other, cross under the word "intersection",
 // and merge into one line exiting the bottom. The thesis in one move.
-export function IntersectionBeat() {
+export function IntersectionBeat({ powerRef }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref, { startAt: 0.8, endAt: 0.45 });
+  usePower(powerRef, p);
   const off = 1 - p;
   return (
     <div

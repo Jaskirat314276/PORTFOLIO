@@ -25,7 +25,7 @@ import Spark from './components/Spark';
 import Stamp from './components/Stamp';
 import VelocityMarquee from './components/VelocityMarquee';
 import ContactForm from './components/ContactForm';
-import { VerticalTrace, IntersectionBeat, MarginTrace, useScrollProgress, useThresholdCount } from './components/Trace';
+import { VerticalTrace, IntersectionBeat, MarginTrace, useScrollProgress, useThresholdCount, usePower } from './components/Trace';
 import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/ScrollBands';
 import { RAIL_THRESHOLDS } from './lib/motion';
 import { useReducedMotion, detectTier } from './lib/useReducedMotion';
@@ -111,16 +111,68 @@ const ResumeDropdown = () => {
   );
 };
 
-// footer LED: pulses three times when it enters view, then rests lit
+// footer LED: pulses three times when it enters view, then rests lit.
+// EASTER EGG: triple-click it (or type "jas" anywhere) and it blinks
+// "HIRE ME" in Morse — once per session.
+const MORSE = { H: '....', I: '..', R: '.-.', E: '.', M: '--' };
 const FooterLed = () => {
   const ref = useRef(null);
   const [mode, setMode] = useState('idle');
+  const [lit, setLit] = useState(true);
+  const clicksRef = useRef([]);
+  const keysRef = useRef('');
+  const timersRef = useRef([]);
+
+  const runMorse = () => {
+    if (sessionStorage.getItem('js-egg')) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    sessionStorage.setItem('js-egg', '1');
+    const seq = [];
+    'HIRE ME'.split('').forEach((ch) => {
+      if (ch === ' ') { seq.push([0, 700]); return; }
+      MORSE[ch].split('').forEach((s) => seq.push([s === '.' ? 140 : 420, 140]));
+      seq.push([0, 420]);
+    });
+    setMode('morse');
+    setLit(false);
+    let t = 250;
+    const timers = timersRef.current;
+    seq.forEach(([on, off]) => {
+      if (on) { timers.push(setTimeout(() => setLit(true), t)); t += on; }
+      timers.push(setTimeout(() => setLit(false), t)); t += off;
+    });
+    timers.push(setTimeout(() => {
+      setLit(true); setMode('rest');
+      console.log('ok, you found it. now go hire jaskirat. — the trace');
+    }, t + 250));
+  };
+
+  const onClick = () => {
+    const now = performance.now();
+    clicksRef.current = [...clicksRef.current.filter((c) => now - c < 650), now];
+    if (clicksRef.current.length >= 3) runMorse();
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      keysRef.current = (keysRef.current + e.key.toLowerCase()).slice(-3);
+      if (keysRef.current === 'jas') runMorse();
+    };
+    window.addEventListener('keydown', onKey);
+    const timers = timersRef.current;
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      timers.forEach(clearTimeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const ob = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setMode('pulsing'); ob.disconnect(); } },
+      ([e]) => { if (e.isIntersecting) { setMode((m) => (m === 'idle' ? 'pulsing' : m)); ob.disconnect(); } },
       { threshold: 0.4 }
     );
     ob.observe(el);
@@ -129,7 +181,7 @@ const FooterLed = () => {
 
   useEffect(() => {
     if (mode !== 'pulsing') return;
-    const t = setTimeout(() => setMode('rest'), 2500);
+    const t = setTimeout(() => setMode((m) => (m === 'pulsing' ? 'rest' : m)), 2500);
     return () => clearTimeout(t);
   }, [mode]);
 
@@ -137,9 +189,57 @@ const FooterLed = () => {
     <span
       ref={ref}
       id="footer-led"
+      onClick={onClick}
       className={`footer-led ${mode === 'pulsing' ? 'pulsing' : mode === 'rest' ? 'rest' : ''}`}
+      style={mode === 'morse' ? {
+        animation: 'none',
+        opacity: lit ? 1 : 0.12,
+        boxShadow: lit ? '0 0 16px var(--accent)' : 'none',
+        transition: 'opacity 0.04s linear',
+      } : undefined}
       aria-hidden="true"
     />
+  );
+};
+
+// clicking the email copies it; the arrow stays a true mailto link
+const EMAIL = 'jaskiratsingh314276@gmail.com';
+const CopyEmail = () => {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef(null);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const copy = async (e) => {
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(EMAIL);
+      setCopied(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 1600);
+    } catch {
+      window.location.href = `mailto:${EMAIL}`;
+    }
+  };
+
+  const serifStyle = {
+    fontSize: 'clamp(20px, 3.5vw, 42px)', color: 'var(--text)',
+    borderBottom: '1px solid var(--border)', paddingBottom: 8,
+    display: 'inline-block', wordBreak: 'break-word', position: 'relative',
+  };
+
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', marginBottom: 22 }}>
+      <a href={`mailto:${EMAIL}`} onClick={copy} data-cursor="press" className="serif" style={serifStyle} title="Click to copy">
+        {EMAIL}
+        {/* trace s7 — the line terminates into the email underline */}
+        <span className="email-trace" aria-hidden="true" />
+      </a>
+      <a href={`mailto:${EMAIL}`} aria-label="Compose an email" className="serif" style={{ fontSize: 'clamp(20px, 3.5vw, 42px)', marginLeft: 12 }}>
+        →
+      </a>
+      {copied && <span className="copied-chip" aria-hidden="true">Copied ✓</span>}
+      <span aria-live="polite" className="sr-only">{copied ? 'Email address copied' : ''}</span>
+    </span>
   );
 };
 
@@ -150,8 +250,9 @@ const PIN_TOPS = ['26%', '44%', '62%', '80%'];
 // These own their own useScrollProgress so per-frame progress state
 // re-renders only this tiny subtree, never the whole page.
 
-const ExpSpine = ({ targetRef, reduced }) => {
+const ExpSpine = ({ targetRef, powerRef, reduced }) => {
   const p = useScrollProgress(targetRef, { startAt: 0.85, endAt: 0.35 });
+  usePower(powerRef, p);
   return (
     <svg
       aria-hidden="true"
@@ -165,8 +266,9 @@ const ExpSpine = ({ targetRef, reduced }) => {
   );
 };
 
-const RailSpine = ({ targetRef, reduced }) => {
+const RailSpine = ({ targetRef, powerRef, reduced }) => {
   const p = useScrollProgress(targetRef, { startAt: 0.8, endAt: 0.25 });
+  usePower(powerRef, p, { onAt: 0.1, offAt: 0.04 });
   const histRef = useRef([]);
   const [tier, setTier] = useState('A');
   const [, settle] = useState(0);
@@ -256,7 +358,7 @@ const RailHud = ({ targetRef }) => {
         className="mono"
         style={{
           fontSize: 10, letterSpacing: '0.16em', color: 'var(--text-dim)',
-          background: 'rgba(16,16,19,0.85)', backdropFilter: 'blur(8px)',
+          background: 'rgba(35,33,29,0.85)', backdropFilter: 'blur(8px)',
           border: '1px solid var(--border)', borderRadius: 6, padding: '7px 12px',
         }}
       >
@@ -291,7 +393,34 @@ export default function Portfolio() {
   const railRef = useRef(null);
   const skillsRef = useRef(null);
   const passRef = useRef(null);
+  const aboutRef = useRef(null);
+  const expSecRef = useRef(null);
+  const projSecRef = useRef(null);
+  const contactRef = useRef(null);
   const litCount = useThresholdCount(railRef, RAIL_THRESHOLDS, { startAt: 0.8, endAt: 0.25 });
+
+  // console sign-off, once per session — for recruiters who open DevTools
+  useEffect(() => {
+    if (sessionStorage.getItem('js-console')) return;
+    sessionStorage.setItem('js-console', '1');
+    console.log(
+      '%cTHE TRACE%c signal acquired — you read consoles. so does jaskirat: jaskiratsingh314276@gmail.com',
+      'background:#d97757;color:#1a1815;padding:2px 8px;border-radius:4px;font-weight:600',
+      'color:#b0aa9c;padding-left:6px'
+    );
+  }, []);
+
+  // contact has no scrub segment — power it on first meaningful view
+  useEffect(() => {
+    const el = contactRef.current;
+    if (!el) return;
+    const ob = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { el.setAttribute('data-powered', ''); ob.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
 
   const [expDocked, setExpDocked] = useState([false, false, false]);
   const [railDocked, setRailDocked] = useState(() => projects.map(() => false));
@@ -467,7 +596,7 @@ export default function Portfolio() {
         <ConvergeBand />
 
         {/* ABOUT + STATS */}
-        <section id="about" className="section">
+        <section id="about" className="section" ref={aboutRef}>
           <div className="container">
             <div className="section-head">
               <GhostNum>01</GhostNum>
@@ -477,7 +606,7 @@ export default function Portfolio() {
             </div>
             <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 72, alignItems: 'start', marginBottom: 80 }}>
               <div style={{ position: 'relative' }}>
-                <IntersectionBeat />
+                <IntersectionBeat powerRef={aboutRef} />
                 <MaskLines
                   className="head"
                   lines={[
@@ -499,7 +628,7 @@ export default function Portfolio() {
                 <Reveal className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   <span className="chip" style={{ transitionDelay: '0.05s' }}><MapPin size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: '-1px' }} />Ranchi, India</span>
                   <span className="chip" style={{ transitionDelay: '0.1s' }}>BIT Mesra · 2026</span>
-                  <span className="chip" style={{ transitionDelay: '0.15s', color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.4)' }}>Open to work</span>
+                  <span className="chip" style={{ transitionDelay: '0.15s', color: 'var(--accent)', borderColor: 'rgba(217,119,87,0.4)' }}>Open to work</span>
                 </Reveal>
               </div>
             </div>
@@ -557,7 +686,7 @@ export default function Portfolio() {
         </section>
 
         {/* EXPERIENCE — the timeline spine */}
-        <section id="experience" className="section">
+        <section id="experience" className="section" ref={expSecRef}>
           <div className="container">
             <div className="section-head">
               <GhostNum>03</GhostNum>
@@ -568,7 +697,7 @@ export default function Portfolio() {
             </div>
             <div ref={expRef} style={{ position: 'relative', paddingLeft: 46 }}>
               {/* the spine — draws with scroll */}
-              <ExpSpine targetRef={expRef} reduced={reduced} />
+              <ExpSpine targetRef={expRef} powerRef={expSecRef} reduced={reduced} />
               <div style={{ display: 'grid', gap: 22 }}>
                 {experience.map((e, i) => (
                   <div key={e.company} style={{ position: 'relative' }}>
@@ -580,7 +709,7 @@ export default function Portfolio() {
                         border: '1.5px solid', zIndex: 2,
                         borderColor: expDocked[i] ? 'var(--accent)' : 'var(--border-hi)',
                         background: expDocked[i] ? 'var(--accent-soft)' : 'var(--bg)',
-                        boxShadow: expDocked[i] ? '0 0 12px rgba(255,107,61,0.7)' : 'none',
+                        boxShadow: expDocked[i] ? '0 0 12px rgba(217,119,87,0.7)' : 'none',
                         transition: 'border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease',
                       }}
                     />
@@ -618,7 +747,7 @@ export default function Portfolio() {
                         </ul>
                         <div className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                           {e.stack.map((t, ci) => (
-                            <span key={t} className="chip" style={{ color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.3)', transitionDelay: `${0.2 + ci * 0.03}s` }}>{t}</span>
+                            <span key={t} className="chip" style={{ color: 'var(--accent)', borderColor: 'rgba(217,119,87,0.3)', transitionDelay: `${0.2 + ci * 0.03}s` }}>{t}</span>
                           ))}
                         </div>
                       </div>
@@ -634,7 +763,7 @@ export default function Portfolio() {
         <DivergeBand />
 
         {/* THE PROJECT RAIL */}
-        <section id="projects" className="section">
+        <section id="projects" className="section" ref={projSecRef}>
           <div className="container">
             <div className="section-head">
               <GhostNum>04</GhostNum>
@@ -649,7 +778,7 @@ export default function Portfolio() {
 
             <div ref={railRef} className="rail-track" style={{ position: 'relative', padding: '30px 0' }}>
               {/* the rail — draws with scroll, pulse rides it */}
-              <RailSpine targetRef={railRef} reduced={reduced} />
+              <RailSpine targetRef={railRef} powerRef={projSecRef} reduced={reduced} />
 
               {projects.map((p, i) => {
                 const fromLeft = i % 2 === 0;
@@ -669,6 +798,7 @@ export default function Portfolio() {
                     <SlideDock
                       side={fromLeft ? 'left' : 'right'}
                       onDocked={() => dockRail(i)}
+                      shadow
                       className={fromLeft ? 'dossier-card-l' : 'dossier-card-r'}
                       style={{ width: '100%', maxWidth: 520 }}
                     >
@@ -729,7 +859,7 @@ export default function Portfolio() {
                         width: 46, height: 46, borderRadius: 11, flexShrink: 0,
                         background: 'var(--accent-soft)', color: 'var(--accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '1px solid rgba(255,107,61,0.3)',
+                        border: '1px solid rgba(217,119,87,0.3)',
                       }}>{a.icon}</div>
                       <div>
                         <h3 style={{ fontSize: 16.5, fontWeight: 500, marginBottom: 6, letterSpacing: '-0.01em' }}>{a.title}</h3>
@@ -761,7 +891,7 @@ export default function Portfolio() {
                       width: 50, height: 50, borderRadius: 13,
                       background: 'var(--accent-soft)', color: 'var(--accent)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '1px solid rgba(255,107,61,0.3)',
+                      border: '1px solid rgba(217,119,87,0.3)',
                     }}><GraduationCap size={22} /></div>
                     <div>
                       <h3 style={{ fontSize: 19, fontWeight: 500, marginBottom: 5, letterSpacing: '-0.01em' }}>{ed.degree}</h3>
@@ -800,12 +930,12 @@ export default function Portfolio() {
                 <span className="mono" style={{
                   position: 'absolute', top: 20, right: 22, overflow: 'hidden',
                   fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--accent)',
-                  border: '1px solid rgba(255,107,61,0.4)', borderRadius: 5, padding: '5px 10px',
+                  border: '1px solid rgba(217,119,87,0.4)', borderRadius: 5, padding: '5px 10px',
                 }}>
                   In development
                   <span aria-hidden="true" style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(100deg, transparent, rgba(255,107,61,0.22), transparent)',
+                    background: 'linear-gradient(100deg, transparent, rgba(217,119,87,0.22), transparent)',
                     animation: 'scan-sheen 2.8s linear infinite',
                   }} />
                 </span>
@@ -826,7 +956,7 @@ export default function Portfolio() {
         </div>
 
         {/* CONTACT */}
-        <section id="contact" className="section" style={{ padding: '140px 0 90px' }}>
+        <section id="contact" className="section" ref={contactRef} style={{ padding: '140px 0 90px' }}>
           <div className="container">
             <div className="section-head">
               <GhostNum>08</GhostNum>
@@ -837,21 +967,7 @@ export default function Portfolio() {
             </div>
             <Reveal delay={0.15}>
               <Magnetic strength={0.2}>
-                <a
-                  href="mailto:jaskiratsingh314276@gmail.com"
-                  data-cursor="press"
-                  className="serif"
-                  style={{
-                    fontSize: 'clamp(20px, 3.5vw, 42px)', color: 'var(--text)',
-                    borderBottom: '1px solid var(--border)', paddingBottom: 8,
-                    display: 'inline-block', marginBottom: 22, wordBreak: 'break-word',
-                    position: 'relative',
-                  }}
-                >
-                  jaskiratsingh314276@gmail.com →
-                  {/* trace s7 — the line terminates into the email underline */}
-                  <span className="email-trace" aria-hidden="true" />
-                </a>
+                <CopyEmail />
               </Magnetic>
             </Reveal>
             <Reveal delay={0.25}>

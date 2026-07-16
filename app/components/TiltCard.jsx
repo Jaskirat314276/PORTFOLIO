@@ -36,7 +36,7 @@ export default function TiltCard({ children, intensity = 12 }) {
       <div
         style={{
           position: 'absolute', inset: 0, borderRadius: 'inherit',
-          background: `radial-gradient(circle at ${t.gx}% ${t.gy}%, rgba(255,107,61,0.15) 0%, transparent 50%)`,
+          background: `radial-gradient(circle at ${t.gx}% ${t.gy}%, rgba(217,119,87,0.15) 0%, transparent 50%)`,
           opacity: t.rx === 0 && t.ry === 0 ? 0 : 1,
           transition: 'opacity 0.3s', pointerEvents: 'none', zIndex: 2,
         }}

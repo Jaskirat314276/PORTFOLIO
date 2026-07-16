@@ -3,9 +3,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-const ACCENT = 0xff6b3d;
-const BLUE = 0x5b9eff;
-const IVORY = 0xf5f1ea;
+const ACCENT = 0xd97757;
+const DIM = 0xa8593c;
+const IVORY = 0xf0eee5;
 
 // ── Voxel "JS" assembly (kept from v1, recoloured terracotta/ivory) ──
 // Lives in its own chunk so three.js stays out of the initial bundle
@@ -49,8 +49,8 @@ export default function LoaderScene() {
             const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random() * 2 - 1), r = 7 + Math.random() * 5;
             const start = new THREE.Vector3(Math.sin(ph) * Math.cos(th) * r, Math.cos(ph) * r, Math.sin(ph) * Math.sin(th) * r);
             const roll = Math.random();
-            const color = roll < warmBias ? ACCENT : roll < warmBias + 0.15 ? BLUE : IVORY;
-            const emissive = color === ACCENT ? 0xff3a1a : color === BLUE ? 0x244e8c : 0x2a2a26;
+            const color = roll < warmBias ? ACCENT : roll < warmBias + 0.15 ? DIM : IVORY;
+            const emissive = color === ACCENT ? 0x8c4a30 : color === DIM ? 0x3c342c : 0x2a2a26;
             const geo = new THREE.BoxGeometry(CUBE, CUBE, CUBE);
             const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.7, roughness: 0.3, emissive, emissiveIntensity: 0.25, transparent: true, opacity: 0 });
             const cube = new THREE.Mesh(geo, mat);
@@ -68,13 +68,13 @@ export default function LoaderScene() {
     addLetter(J, jX, 0.82);
     addLetter(S, sX, 0.7);
 
-    const grid = new THREE.GridHelper(14, 28, ACCENT, BLUE);
+    const grid = new THREE.GridHelper(14, 28, ACCENT, 0x4a443a);
     grid.material.transparent = true; grid.material.opacity = 0.14; grid.position.y = -1.9;
     scene.add(grid);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
     const l1 = new THREE.PointLight(ACCENT, 7, 16); l1.position.set(3, 3, 3); scene.add(l1);
-    const l2 = new THREE.PointLight(BLUE, 4, 16); l2.position.set(-3, -2, 2); scene.add(l2);
+    const l2 = new THREE.PointLight(0xf0eee5, 2.5, 16); l2.position.set(-3, -2, 2); scene.add(l2);
 
     let frameId;
     const DUR = 1.6, t0 = performance.now();

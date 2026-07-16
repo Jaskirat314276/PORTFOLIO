@@ -27,7 +27,7 @@ export default function HeroScene() {
     // Main icosahedron
     const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
     const icoMat = new THREE.MeshStandardMaterial({
-      color: 0xff6b3d, metalness: 0.7, roughness: 0.2, flatShading: true, transparent: true, opacity: 0.85,
+      color: 0xd97757, metalness: 0.7, roughness: 0.2, flatShading: true, transparent: true, opacity: 0.85,
     });
     const ico = new THREE.Mesh(icoGeo, icoMat);
     scene.add(ico);
@@ -41,19 +41,19 @@ export default function HeroScene() {
     // Outer wireframe sphere (blue)
     const outerGeo = new THREE.IcosahedronGeometry(2.5, 1);
     const outerEdges = new THREE.EdgesGeometry(outerGeo);
-    const outerMat = new THREE.LineBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.2 });
+    const outerMat = new THREE.LineBasicMaterial({ color: 0x4a443a, transparent: true, opacity: 0.2 });
     const outerWire = new THREE.LineSegments(outerEdges, outerMat);
     scene.add(outerWire);
 
     // Tilted orbital rings
     const ringGeo = new THREE.TorusGeometry(2.1, 0.012, 16, 140);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6b3d, transparent: true, opacity: 0.55 });
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xd97757, transparent: true, opacity: 0.55 });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = Math.PI * 0.42;
     scene.add(ring);
 
     const ring2Geo = new THREE.TorusGeometry(2.1, 0.009, 16, 140);
-    const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.35 });
+    const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x4a443a, transparent: true, opacity: 0.35 });
     const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
     ring2.rotation.x = Math.PI * 0.42;
     ring2.rotation.y = Math.PI * 0.5;
@@ -89,8 +89,8 @@ export default function HeroScene() {
 
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const l1 = new THREE.PointLight(0xff6b3d, 5, 15); l1.position.set(3, 3, 3); scene.add(l1);
-    const l2 = new THREE.PointLight(0x5b9eff, 3, 15); l2.position.set(-3, -2, 2); scene.add(l2);
+    const l1 = new THREE.PointLight(0xd97757, 5, 15); l1.position.set(3, 3, 3); scene.add(l1);
+    const l2 = new THREE.PointLight(0x4a443a, 3, 15); l2.position.set(-3, -2, 2); scene.add(l2);
     const l3 = new THREE.PointLight(0xffffff, 1.5, 15); l3.position.set(0, 4, -3); scene.add(l3);
 
     const mouse = { x: 0, y: 0, tx: 0, ty: 0 };

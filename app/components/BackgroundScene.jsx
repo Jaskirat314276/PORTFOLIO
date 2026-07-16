@@ -41,7 +41,7 @@ export default function BackgroundScene() {
     mount.appendChild(renderer.domElement);
 
     // ── shared assets (every instance reuses these; disposed once) ──
-    const ACCENT = 0xff6b3d, BLUE = 0x5b9eff, IVORY = 0xf5f1ea;
+    const ACCENT = 0xd97757, DIM = 0xa8593c, IVORY = 0xf0eee5;
     const geos = [], mats = [];
     const g = (geo) => { geos.push(geo); return geo; };
     const m = (mat) => { mats.push(mat); return mat; };
@@ -52,11 +52,11 @@ export default function BackgroundScene() {
     const line = (color, opacity) => m(new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
 
     const accentMat = solid(ACCENT, 0.34);
-    const blueMat = solid(BLUE, 0.28);
+    const blueMat = solid(DIM, 0.3);
     const ivoryMat = solid(IVORY, 0.26);
-    const orbitMat = basic(BLUE, 0.3);
+    const orbitMat = basic(IVORY, 0.22);
     const lineAccent = line(ACCENT, 0.45);
-    const lineBlue = line(BLUE, 0.4);
+    const lineBlue = line(DIM, 0.5);
     const lineIvory = line(IVORY, 0.35);
 
     const barGeo = g(new THREE.BoxGeometry(0.95, 0.11, 0.11));
@@ -198,7 +198,7 @@ export default function BackgroundScene() {
         const tone = Math.random();
         if (tone < 0.6) { colors[i * 3] = 1; colors[i * 3 + 1] = 0.95; colors[i * 3 + 2] = 0.9; }
         else if (tone < 0.85) { colors[i * 3] = 1; colors[i * 3 + 1] = 0.55; colors[i * 3 + 2] = 0.3; }
-        else { colors[i * 3] = 0.4; colors[i * 3 + 1] = 0.65; colors[i * 3 + 2] = 1; }
+        else { colors[i * 3] = 0.72; colors[i * 3 + 1] = 0.68; colors[i * 3 + 2] = 0.6; }
       }
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -216,8 +216,8 @@ export default function BackgroundScene() {
     }
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const keyLight = new THREE.PointLight(0xff6b3d, 4, 40); scene.add(keyLight);
-    const fillLight = new THREE.PointLight(0x5b9eff, 3, 40); scene.add(fillLight);
+    const keyLight = new THREE.PointLight(0xd97757, 4, 40); scene.add(keyLight);
+    const fillLight = new THREE.PointLight(0xf0eee5, 2, 40); scene.add(fillLight);
     const rimLight = new THREE.PointLight(0xffffff, 1.5, 30); scene.add(rimLight);
 
     const parallax = { x: 0, y: 0, tx: 0, ty: 0 };

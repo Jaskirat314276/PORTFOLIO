@@ -33,6 +33,8 @@ export default function Stamp({ children, delay = 0.2, active, className = '', s
       className={`stamp stamp-in ${on ? 'in' : ''} ${className}`}
       style={{ transitionDelay: `${delay}s`, ...style }}
     >
+      {/* ink halo — expands and fades as the stamp lands */}
+      <span className="ink-halo" aria-hidden="true" style={{ animationDelay: `${delay + 0.12}s` }} />
       {children}
     </span>
   );

@@ -5,10 +5,14 @@ import { useEffect, useRef, useState } from 'react';
 // THE signature primitive: objects enter FROM THE SIDES and dock.
 // side: 'left' | 'right'. mobile collapses travel to 24px (CSS-driven).
 // onDocked fires once when the entrance transition ends (sparks/stamps hook here).
+// v3 physicality: travel (expo-out) and rotation (back-out counter-flex) ride
+// separate wrappers; `shadow` adds a desk-shadow layer that lags the card by
+// one beat — the eye reads weight without knowing why.
 export default function SlideDock({
-  children, side = 'left', delay = 0, onDocked, className = '', style,
+  children, side = 'left', delay = 0, onDocked, shadow = false, className = '', style,
 }) {
   const ref = useRef(null);
+  const moveRef = useRef(null);
   const [shown, setShown] = useState(false);
   const dockedRef = useRef(false);
   const onDockedRef = useRef(onDocked);
@@ -44,7 +48,7 @@ export default function SlideDock({
   }, [shown, delay]);
 
   const handleEnd = (e) => {
-    if (e.target !== ref.current) return;
+    if (e.target !== moveRef.current || e.propertyName !== 'transform') return;
     if (shown) reportDock();
   };
 
@@ -53,9 +57,14 @@ export default function SlideDock({
       ref={ref}
       onTransitionEnd={handleEnd}
       className={`slidedock from-${side} ${shown ? 'in' : ''} ${className}`}
-      style={{ transitionDelay: `${delay}s`, ...style }}
+      style={style}
     >
-      {children}
+      {shadow && <span className="dock-shadow" aria-hidden="true" style={{ transitionDelay: `${delay + 0.06}s` }} />}
+      <div ref={moveRef} className="dock-move" style={{ transitionDelay: `${delay}s` }}>
+        <div className="dock-tilt" style={{ transitionDelay: `${delay}s` }}>
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

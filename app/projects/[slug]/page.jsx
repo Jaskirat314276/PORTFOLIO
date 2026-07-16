@@ -11,6 +11,9 @@ const STAMP_FOR = {
   '04': 'LIVE DEMO', '05': 'HARDWARE · 300V TESTED', '06': 'SIMULATION',
 };
 
+// detail pages are paper — mobile browser chrome follows the flip
+export const viewport = { themeColor: "#faf9f5" };
+
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
@@ -41,7 +44,7 @@ export default async function ProjectPage({ params }) {
     }}>
       <style>{`
         .paper-page { animation: paperIn 0.32s ease both; }
-        @keyframes paperIn { from { background: #08080a; } to { background: var(--paper); } }
+        @keyframes paperIn { from { background: #1a1815; } to { background: var(--paper); } }
         .tick-draw { stroke-dasharray: 22; stroke-dashoffset: 22; animation: tickDraw 0.4s ease forwards; }
         @keyframes tickDraw { to { stroke-dashoffset: 0; } }
         .paper-btn { transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease; }

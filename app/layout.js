@@ -3,6 +3,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import "./globals.css";
 import LoadingGate from "./components/LoadingGate";
+import TabDim from "./components/TabDim";
 
 // GA4 measurement ID (public by design; env var can override per-deploy)
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-DMKJ8F316E";
@@ -60,7 +61,25 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#08080a",
+  themeColor: "#1a1815",
+};
+
+// structured data — real profile facts only
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Jaskirat Singh",
+  url: SITE,
+  email: "mailto:jaskiratsingh314276@gmail.com",
+  telephone: "+91-8340361891",
+  jobTitle: "Software Developer",
+  alumniOf: { "@type": "CollegeOrUniversity", name: "Birla Institute of Technology, Mesra" },
+  sameAs: [
+    "https://github.com/Jaskirat314276",
+    "https://www.linkedin.com/in/jaskirat-singh-b644a4255/",
+    "https://leetcode.com/Jaskirat-singh",
+    "https://www.geeksforgeeks.org/user/jaskiratsi2k1r",
+  ],
 };
 
 export default function RootLayout({ children }) {
@@ -72,6 +91,11 @@ export default function RootLayout({ children }) {
       <body>
         <a href="#main" className="skip-link">Skip to content</a>
         <LoadingGate>{children}</LoadingGate>
+        <TabDim />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
       </body>
       {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
       {/* only on Vercel-hosted deploys — its /_vercel/insights endpoint

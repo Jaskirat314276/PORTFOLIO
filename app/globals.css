@@ -4,25 +4,25 @@
    THE TRACE — Claude design language, warm-dark. One accent.
    ============================================================ */
 :root {
-  --bg: #08080a;
-  --surface: #101013;
-  --surface-hi: #17171b;
-  --border: rgba(245, 241, 234, 0.1);
-  --border-hi: rgba(245, 241, 234, 0.22);
-  --text: #f5f1ea;
-  --text-dim: rgba(245, 241, 234, 0.7);
-  --text-muted: rgba(245, 241, 234, 0.45);
-  --accent: #ff6b3d;
-  --accent-dim: #d9531f;
-  --accent-soft: rgba(255, 107, 61, 0.12);
-  --accent2: #5b9eff;
-  --accent2-soft: rgba(91, 158, 255, 0.12);
+  --bg: #1a1815;
+  --surface: #23211d;
+  --surface-hi: #2c2925;
+  --border: #38342d;
+  --border-hi: #4a443a;
+  --text: #f0eee5;
+  --text-dim: #b0aa9c;
+  --text-muted: #7a7466;
+  --accent: #d97757;
+  --accent-dim: #a8593c;
+  --accent-soft: rgba(217, 119, 87, 0.12);
+  --accent2: #a8593c;
+  --accent2-soft: rgba(168, 89, 60, 0.12);
   --paper: #faf9f5;
   --paper-ink: #1f1e1d;
   --paper-line: #e8e5db;
-  --success: #10b981;
-  --danger: #ef4444;
-  --info: #5b9eff;
+  --success: #7d9b76;
+  --danger: #c45a4a;
+  --info: #6a8fae;
 
   --serif: var(--font-display), "Instrument Serif", Georgia, serif;
   --sans: var(--font-body), "Bricolage Grotesque", system-ui, sans-serif;
@@ -73,6 +73,11 @@ button { font-family: inherit; }
 }
 .skip-link:focus { top: 16px; }
 
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* ============================================================
    Typography helpers
    ============================================================ */
@@ -104,7 +109,7 @@ button { font-family: inherit; }
 }
 /* static glow — animating text-shadow on a giant headline repaints a
    huge area every frame for the page's whole lifetime */
-.head-xl .ital { text-shadow: 0 0 60px rgba(255, 107, 61, 0.45); }
+.head-xl .ital { text-shadow: 0 0 60px rgba(217, 119, 87, 0.45); }
 
 /* Mono eyebrow chip ----------------------------------------- */
 .eyebrow {
@@ -153,7 +158,7 @@ button { font-family: inherit; }
   position: relative;
   /* no backdrop-filter here: ~20 blurred cards compositing against the
      live WebGL canvas is a frame killer, and the gradient hides it anyway */
-  background: linear-gradient(135deg, rgba(245, 241, 234, 0.045) 0%, rgba(245, 241, 234, 0.012) 100%);
+  background: linear-gradient(135deg, rgba(240, 238, 229, 0.045) 0%, rgba(240, 238, 229, 0.012) 100%);
   border: 1px solid var(--border);
   border-radius: 18px;
   transition: border-color 0.35s var(--ease-expo),
@@ -161,9 +166,9 @@ button { font-family: inherit; }
               transform 0.35s var(--ease-expo);
 }
 .card:hover {
-  border-color: rgba(255, 107, 61, 0.4);
-  box-shadow: 0 18px 50px -18px rgba(255, 107, 61, 0.3),
-              inset 0 0 0 1px rgba(255, 107, 61, 0.06);
+  border-color: rgba(217, 119, 87, 0.4);
+  box-shadow: 0 18px 50px -18px rgba(217, 119, 87, 0.3),
+              inset 0 0 0 1px rgba(217, 119, 87, 0.06);
   transform: translateY(-3px);
 }
 /* corner ticks (PCB dressing) — one pseudo, ::after stays free for the sweep */
@@ -183,7 +188,7 @@ button { font-family: inherit; }
 .card:not(.ic-card)::after, .paper::after {
   content: ""; position: absolute; top: 0; left: -130%;
   width: 60%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(245, 241, 234, 0.09), transparent);
+  background: linear-gradient(100deg, transparent, rgba(240, 238, 229, 0.09), transparent);
   transform: translateX(0) skewX(-18deg);
   transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none; z-index: 3;
@@ -247,7 +252,7 @@ button { font-family: inherit; }
 }
 .paper:hover {
   transform: translateY(-4px) rotate(0.4deg);
-  box-shadow: 0 40px 70px -28px rgba(0, 0, 0, 0.8), 0 0 30px -12px rgba(255, 107, 61, 0.35);
+  box-shadow: 0 40px 70px -28px rgba(0, 0, 0, 0.8), 0 0 30px -12px rgba(217, 119, 87, 0.35);
 }
 .stamp {
   display: inline-flex; align-items: center; gap: 6px;
@@ -257,7 +262,24 @@ button { font-family: inherit; }
   padding: 6px 12px; border: 1.5px solid var(--accent);
   border-radius: 6px;
   transform: rotate(-8deg);
-  background: rgba(255, 107, 61, 0.06);
+  background: rgba(217, 119, 87, 0.06);
+}
+/* ink halo — a ring that expands and fades the moment the stamp lands */
+.ink-halo {
+  position: absolute; inset: -4px; border-radius: 10px;
+  border: 1.5px solid var(--accent); opacity: 0; pointer-events: none;
+}
+.stamp-in.in .ink-halo { animation: ink-halo 0.42s ease-out 1 both; }
+@keyframes ink-halo {
+  0% { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+/* folded top-right corner — the paper is a real document */
+.paper::before {
+  content: ""; position: absolute; top: 0; right: 0; z-index: 2;
+  border-style: solid; border-width: 0 15px 15px 0;
+  border-color: var(--bg) var(--bg) var(--paper-line) transparent;
+  border-bottom-left-radius: 4px; pointer-events: none;
 }
 
 /* ============================================================
@@ -330,13 +352,28 @@ button { font-family: inherit; }
 }
 .maskline.in > span { transform: none; }
 
-.slidedock {
-  opacity: 0;
+/* travel (expo) and rotation (back-out counter-flex) on separate layers;
+   the optional .dock-shadow lags 60ms behind — paper with weight */
+.slidedock { position: relative; }
+.slidedock .dock-move {
+  opacity: 0; position: relative; z-index: 1; height: 100%;
   transition: opacity 0.65s var(--ease-expo), transform 0.65s var(--ease-expo);
 }
-.slidedock.from-left  { transform: translateX(-96px) rotate(-1.5deg); }
-.slidedock.from-right { transform: translateX(96px) rotate(1.5deg); }
-.slidedock.in { opacity: 1; transform: none; }
+.slidedock .dock-tilt { height: 100%; transition: transform 0.7s var(--ease-back); }
+.slidedock.from-left  .dock-move { transform: translateX(-96px); }
+.slidedock.from-right .dock-move { transform: translateX(96px); }
+.slidedock.from-left  .dock-tilt { transform: rotate(-1.5deg); }
+.slidedock.from-right .dock-tilt { transform: rotate(1.5deg); }
+.slidedock.in .dock-move, .slidedock.in .dock-tilt { opacity: 1; transform: none; }
+.dock-shadow {
+  position: absolute; inset: 12px 8px -8px 8px; z-index: 0;
+  border-radius: 18px; background: rgba(0, 0, 0, 0.55);
+  filter: blur(16px); pointer-events: none; opacity: 0;
+  transition: opacity 0.7s var(--ease-expo), transform 0.72s var(--ease-expo);
+}
+.slidedock.from-left  .dock-shadow { transform: translateX(-96px) translateY(10px) scale(1.05); }
+.slidedock.from-right .dock-shadow { transform: translateX(96px) translateY(10px) scale(1.05); }
+.slidedock.in .dock-shadow { opacity: 0.45; transform: translateY(0) scale(1); }
 
 .stamp-in {
   opacity: 0; transform: scale(1.4) rotate(var(--rot, -8deg));
@@ -482,7 +519,7 @@ button { font-family: inherit; }
 .cform textarea { resize: vertical; min-height: 96px; }
 .cform input::placeholder, .cform textarea::placeholder { color: var(--text-muted); }
 .cform input:focus, .cform textarea:focus {
-  outline: none; border-color: rgba(255, 107, 61, 0.55);
+  outline: none; border-color: rgba(217, 119, 87, 0.55);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .cform button {
@@ -523,8 +560,11 @@ button { font-family: inherit; }
   .container { padding: 0 20px; }
   .section { padding: 78px 0; }
   /* lateral doctrine, mobile: everything docks from the right, ±24px */
-  .slidedock.from-left, .slidedock.from-right { transform: translateX(24px) rotate(0.8deg); }
-  .slidedock.in { transform: none; }
+  .slidedock.from-left .dock-move, .slidedock.from-right .dock-move { transform: translateX(24px); }
+  .slidedock.from-left .dock-tilt, .slidedock.from-right .dock-tilt { transform: rotate(0.8deg); }
+  .slidedock.from-left .dock-shadow, .slidedock.from-right .dock-shadow { transform: translateX(24px) translateY(8px) scale(1.04); }
+  .slidedock.in .dock-move, .slidedock.in .dock-tilt { transform: none; }
+  .slidedock.in .dock-shadow { transform: none; }
   .nav-links { display: none !important; }
   .nav-toggle { display: inline-flex !important; }
   .ghost-num { font-size: 90px; opacity: 0.4; }
@@ -601,7 +641,7 @@ section[id] { scroll-margin-top: 80px; }
 .rail-pulse {
   position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
   border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(255, 107, 61, 0.5);
+  box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(217, 119, 87, 0.5);
   z-index: 4; pointer-events: none;
 }
 .rail-hud {
@@ -618,7 +658,7 @@ section[id] { scroll-margin-top: 80px; }
 }
 .rail-stub.left { right: 50%; }
 .rail-stub.right { left: 50%; }
-.rail-stub.lit { background: var(--accent); box-shadow: 0 0 8px rgba(255, 107, 61, 0.6); }
+.rail-stub.lit { background: var(--accent); box-shadow: 0 0 8px rgba(217, 119, 87, 0.6); }
 .rail-via {
   position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
   transform: translate(-50%, -50%); border-radius: 50%;
@@ -627,7 +667,7 @@ section[id] { scroll-margin-top: 80px; }
 }
 .rail-via.lit {
   border-color: var(--accent); background: var(--accent-soft);
-  box-shadow: 0 0 12px rgba(255, 107, 61, 0.7);
+  box-shadow: 0 0 12px rgba(217, 119, 87, 0.7);
 }
 
 @media (max-width: 768px) {
@@ -637,11 +677,111 @@ section[id] { scroll-margin-top: 80px; }
 }
 
 /* ============================================================
+   THE 404 — open circuit
+   ============================================================ */
+.nf-board {
+  min-height: 100vh; padding: 40px 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; text-align: center; background: var(--bg); position: relative; overflow: hidden;
+}
+.nf-board::before {
+  content: ""; position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+  width: 480px; height: 480px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(217, 119, 87, 0.1) 0%, transparent 70%);
+  filter: blur(60px);
+}
+.nf-circuit { display: flex; flex-direction: column; align-items: center; }
+/* the trace draws… then flickers and dies at the break */
+.nf-line {
+  fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round;
+  stroke-dashoffset: 1;
+  animation: nf-draw 0.8s var(--ease-expo) 0.2s forwards, nf-flicker 0.22s steps(2) 1.05s 2;
+}
+@keyframes nf-draw { to { stroke-dashoffset: 0.45; } } /* stops dead at 55% */
+@keyframes nf-flicker { 50% { opacity: 0.15; } }
+.nf-pad {
+  position: relative; width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid var(--danger); background: transparent; margin-top: -66px;
+  opacity: 0; animation: nf-pop 0.3s ease-out 1.15s forwards;
+}
+@keyframes nf-pop { to { opacity: 1; } }
+.nf-debris {
+  position: absolute; width: 5px; height: 1.5px; background: var(--danger);
+  top: 50%; left: 50%; opacity: 0;
+}
+.nf-d1 { animation: nf-scatter1 0.35s ease-out 1.2s forwards; }
+.nf-d2 { animation: nf-scatter2 0.35s ease-out 1.24s forwards; }
+.nf-d3 { animation: nf-scatter3 0.35s ease-out 1.28s forwards; }
+@keyframes nf-scatter1 { to { opacity: 0.8; transform: translate(10px, -7px) rotate(38deg); } }
+@keyframes nf-scatter2 { to { opacity: 0.7; transform: translate(-12px, -4px) rotate(-24deg); } }
+@keyframes nf-scatter3 { to { opacity: 0.6; transform: translate(7px, 9px) rotate(65deg); } }
+.nf-err { font-size: 11px; letter-spacing: 0.24em; color: var(--text-dim); }
+.nf-head { font-size: clamp(34px, 6vw, 64px); line-height: 1.1; color: var(--text); }
+.nf-head .ital { color: var(--accent); font-style: italic; }
+.nf-back {
+  font-size: 11px; letter-spacing: 0.18em; color: var(--text-dim);
+  border: 1px solid var(--border-hi); border-radius: 999px; padding: 12px 22px;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.nf-back:hover { border-color: var(--accent); color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  .nf-line { animation: none; stroke-dashoffset: 0.45; }
+  .nf-pad { animation: none; opacity: 1; }
+  .nf-d1 { animation: none; opacity: 0.8; transform: translate(10px, -7px) rotate(38deg); }
+  .nf-d2 { animation: none; opacity: 0.7; transform: translate(-12px, -4px) rotate(-24deg); }
+  .nf-d3 { animation: none; opacity: 0.6; transform: translate(7px, 9px) rotate(65deg); }
+}
+
+/* ============================================================
+   POWER-ON LIGHTING — sections sit dim until the trace arrives;
+   [data-powered] (on the section or an ancestor wrapper) warms them
+   ============================================================ */
+.section .ghost-num { opacity: 0.18; transition: opacity 0.45s ease; }
+[data-powered] .ghost-num { opacity: 0.55; }
+.section .eyebrow .led { opacity: 0.3; box-shadow: none; transition: opacity 0.45s ease, box-shadow 0.45s ease; }
+[data-powered] .eyebrow .led { opacity: 1; box-shadow: 0 0 10px var(--accent); }
+.section .ic-card .ref { transition: color 0.45s ease; }
+[data-powered] .ic-card .ref { color: var(--text-dim); }
+.section .corner-ticks::before { opacity: 0.18; transition: opacity 0.45s ease; }
+[data-powered] .corner-ticks::before { opacity: 0.5; }
+@media (max-width: 768px) {
+  [data-powered] .ghost-num { opacity: 0.4; }
+}
+
+/* Education grade flip — the rest beat's single detail: the serif grade
+   seals onto the row after it settles (back-out, slight rotate) */
+.edu-grade {
+  opacity: 0; transform: scale(1.35) rotate(4deg);
+  transition: opacity 0.5s var(--ease-back) 0.45s, transform 0.5s var(--ease-back) 0.45s;
+}
+.reveal.in .edu-grade { opacity: 1; transform: none; }
+
+/* Copy-email confirmation chip */
+.copied-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent);
+  border: 1px solid rgba(217, 119, 87, 0.5); border-radius: 6px;
+  padding: 5px 10px; margin-left: 14px; vertical-align: middle;
+  background: var(--accent-soft);
+  animation: hud-pop 0.4s var(--ease-back);
+}
+
+/* ============================================================
    Reduced motion
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal, .slidedock { opacity: 1 !important; transform: none !important; }
+  .slidedock .dock-move, .slidedock .dock-tilt { opacity: 1 !important; transform: none !important; }
+  .dock-shadow { opacity: 0.45 !important; transform: none !important; }
+  .ink-halo { animation: none !important; opacity: 0 !important; }
+  .edu-grade { opacity: 1 !important; transform: none !important; }
+  /* pre-powered: the reduced page is a design target, not a fallback */
+  .section .ghost-num { opacity: 0.55 !important; }
+  .section .eyebrow .led { opacity: 1 !important; box-shadow: 0 0 10px var(--accent) !important; }
+  .section .ic-card .ref { color: var(--text-dim) !important; }
+  .section .corner-ticks::before { opacity: 0.5 !important; }
   .maskline > span { transform: none !important; }
   .stamp-in { opacity: 1 !important; transform: rotate(var(--rot, -8deg)) !important; }
   .grain { animation: none !important; }
@@ -661,4 +801,35 @@ section[id] { scroll-margin-top: 80px; }
   .stamp-icon { opacity: 1 !important; transform: rotate(-6deg) !important; }
   .eyebrow .led { animation: none !important; }
   .paper:hover, .card:hover { transform: none !important; }
+}
+
+/* ============================================================
+   Print — the case file prints as actual paper
+   ============================================================ */
+@media print {
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --surface-hi: #ffffff;
+    --border: #e8e5db; --border-hi: #d8d4c8;
+    --text: #1f1e1d; --text-dim: #3f3d38; --text-muted: #7a7466;
+    --accent: #a8593c; --accent-dim: #a8593c;
+    --accent-soft: rgba(168, 89, 60, 0.08);
+  }
+  .grain, nav, .glow-orb, .scroll-progress, .debug-hud, .marquee-band,
+  .rail-hud, .rail-pulse, .pulse-tail, .footer-led, .scroll-cue-dot,
+  .dock-shadow, .ink-halo, .ghost-num, .env-dot, canvas,
+  .cform, .copied-chip { display: none !important; }
+  body, .page { background: #fff !important; color: var(--text) !important; }
+  .head-xl .ital { text-shadow: none !important; }
+  .reveal, .slidedock .dock-move, .slidedock .dock-tilt, .maskline > span,
+  .cascade .chip, .cascade .mchip, .exp-li, .edu-grade, .email-trace,
+  .stamp-in { opacity: 1 !important; transform: none !important; }
+  .exp-dash, .ic-pin { transform: scaleX(1) !important; }
+  .card, .paper { box-shadow: none !important; background: #fff !important; }
+  .trace-path { stroke: #d8d4c8 !important; stroke-dashoffset: 0 !important; }
+  section { break-inside: avoid-page; }
+  /* recruiters get the real URLs on paper */
+  main a[href^="http"]::after, main a[href^="mailto"]::after, main a[href^="tel"]::after {
+    content: " (" attr(href) ")"; font-size: 9px; color: var(--text-muted);
+    font-family: var(--mono); letter-spacing: 0;
+  }
 }
