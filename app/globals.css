@@ -1,244 +1,589 @@
 @import "tailwindcss";
 
+/* ============================================================
+   THE TRACE — Claude design language, warm-dark. One accent.
+   ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #08080a;
+  --surface: #101013;
+  --surface-hi: #17171b;
+  --border: rgba(245, 241, 234, 0.1);
+  --border-hi: rgba(245, 241, 234, 0.22);
+  --text: #f5f1ea;
+  --text-dim: rgba(245, 241, 234, 0.7);
+  --text-muted: rgba(245, 241, 234, 0.45);
+  --accent: #ff6b3d;
+  --accent-dim: #d9531f;
+  --accent-soft: rgba(255, 107, 61, 0.12);
+  --accent2: #5b9eff;
+  --accent2-soft: rgba(91, 158, 255, 0.12);
+  --paper: #faf9f5;
+  --paper-ink: #1f1e1d;
+  --paper-line: #e8e5db;
+  --success: #10b981;
+  --danger: #ef4444;
+  --info: #5b9eff;
+
+  --serif: var(--font-display), "Instrument Serif", Georgia, serif;
+  --sans: var(--font-body), "Bricolage Grotesque", system-ui, sans-serif;
+  --mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-mask: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
+html { scroll-behavior: smooth; }
 html, body { max-width: 100%; overflow-x: hidden; }
 
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* Selection + scrollbar + focus rings ----------------------- */
+::selection { background: var(--accent-soft); color: var(--accent); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 999px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: fixed; top: -80px; left: 16px; z-index: 10000;
+  background: var(--accent); color: var(--bg); font-family: var(--mono);
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 12px 18px; border-radius: 8px; transition: top 0.2s;
+}
+.skip-link:focus { top: 16px; }
+
 /* ============================================================
-   Responsive overrides for inline-styled portfolio components
+   Typography helpers
    ============================================================ */
-
-/* Touch / coarse-pointer devices: never hide cursor, hide custom cursor */
-@media (hover: none), (pointer: coarse) {
-  body, a, button { cursor: auto !important; }
-  .custom-cursor-dot, .custom-cursor-ring { display: none !important; }
+.serif { font-family: var(--serif); }
+.mono {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
-/* Mobile menu toggle is hidden by default; revealed at the mobile breakpoint */
-.nav-toggle { display: none; }
-
-/* Tablet / small desktop */
-@media (max-width: 1024px) {
-  .page-container { padding: 0 24px !important; }
-  .hero-grid {
-    padding: 60px 0 48px !important;
-    min-height: auto !important;
-  }
-  .about-grid {
-    grid-template-columns: 1fr !important;
-    gap: 32px !important;
-  }
+/* Editorial section headline (Bricolage + Instrument accent word) */
+.head {
+  font-family: var(--sans);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.03;
+  font-size: clamp(32px, 4.6vw, 58px);
+}
+.head .ital {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+.head-xl {
+  font-size: clamp(44px, 8vw, 112px);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+.head-xl .ital { animation: head-glow 4.5s ease-in-out infinite; }
+@keyframes head-glow {
+  0%, 100% { text-shadow: 0 0 55px rgba(255, 107, 61, 0.35); }
+  50% { text-shadow: 0 0 95px rgba(255, 107, 61, 0.6); }
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .page-container { padding: 0 20px !important; }
-  .nav { padding: 18px 0 !important; }
-  .nav-logo { font-size: 24px !important; }
-  .nav-links { display: none !important; }
-  .nav-toggle { display: inline-flex !important; }
-  .nav-cta { padding: 8px 16px !important; font-size: 13px !important; }
-
-  .section { padding: 72px 0 !important; }
-  .contact-section { padding: 96px 0 64px !important; }
-
-  .hero-grid { padding: 32px 0 40px !important; }
-  .scroll-cue { margin-top: 40px !important; }
-  .marquee { padding: 14px 0 !important; }
-  .marquee span span { font-size: 18px !important; padding: 0 18px !important; }
-  .hero-eyebrow { font-size: 13px !important; margin-bottom: 20px !important; }
-  .hero-paragraph { font-size: 16px !important; margin-bottom: 28px !important; }
-  .hero-cta-row { gap: 12px !important; }
-  .hero-h1 { margin-bottom: 24px !important; }
-
-  .section-eyebrow { font-size: 13px !important; margin-bottom: 18px !important; }
-  .section-h2 { margin-bottom: 36px !important; }
-
-  .stat-card { padding: 22px !important; }
-  .stat-card-value { font-size: 36px !important; margin-bottom: 6px !important; }
-
-  .skill-card { padding: 24px !important; }
-  .skill-card h4 { font-size: 22px !important; margin-bottom: 16px !important; }
-
-  .exp-card { padding: 24px !important; }
-  .exp-card h3 { font-size: 20px !important; }
-  .exp-card-header { flex-direction: column !important; align-items: flex-start !important; }
-
-  .project-row {
-    grid-template-columns: 56px 1fr !important;
-    padding: 24px !important;
-    gap: 16px !important;
-  }
-  .project-row-arrow { display: none !important; }
-  .project-num { font-size: 44px !important; }
-  .project-row h3 { font-size: 20px !important; }
-
-  .achievement-card { padding: 22px !important; gap: 14px !important; }
-
-  .edu-row {
-    grid-template-columns: auto 1fr !important;
-    padding: 24px !important;
-    gap: 16px !important;
-  }
-  .edu-grade {
-    grid-column: 1 / -1 !important;
-    font-size: 18px !important;
-    text-align: left !important;
-    margin-top: 4px !important;
-  }
-  .edu-row h3 { font-size: 18px !important; }
-
-  .contact-email { margin-bottom: 32px !important; }
-  .contact-socials { gap: 10px !important; }
-  .contact-socials a { padding: 10px 16px !important; font-size: 13px !important; }
-
-  .footer { flex-direction: column !important; gap: 6px !important; text-align: center !important; }
-
-  .project-detail-main { padding: 32px 0 96px !important; }
-  .project-detail-num { font-size: 64px !important; }
-  .project-detail-back { margin-bottom: 32px !important; }
-
-  .ambient-orb { display: none !important; }
+/* Mono eyebrow chip ----------------------------------------- */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--text-dim);
+  padding: 7px 14px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface);
+}
+.eyebrow .led {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 10px var(--accent);
+  animation: led-rest 2.6s ease-in-out infinite;
 }
 
-/* Loader: hide HUD side panels below 1100px so they don't overlap the scene */
-@media (max-width: 1100px) {
-  .loader-vitals-left, .loader-vitals-right { display: none !important; }
-}
-
-/* Small mobile */
-@media (max-width: 480px) {
-  .page-container { padding: 0 16px !important; }
-  .hero-cta, .resume-button { padding: 12px 20px !important; font-size: 13px !important; }
-  .nav-cta-label { display: none !important; }
-  .nav-cta { padding: 8px !important; }
-  .stat-card-value { font-size: 32px !important; }
-  .project-num { font-size: 36px !important; }
-  .contact-socials a { padding: 8px 14px !important; font-size: 12px !important; }
+/* Ghost section numeral ------------------------------------- */
+.ghost-num {
+  position: absolute; top: -0.35em; right: 0; z-index: 0;
+  font-family: var(--serif); font-size: clamp(120px, 15vw, 260px);
+  line-height: 1; color: transparent;
+  -webkit-text-stroke: 1px var(--border-hi);
+  pointer-events: none; user-select: none;
+  opacity: 0.55;
 }
 
 /* ============================================================
-   UI ENHANCEMENT LAYER
-   Additive polish over the base portfolio. To remove, revert the
-   commit titled "Enhance UI" — nothing above this block depends on it.
+   Layout
    ============================================================ */
+.page { position: relative; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
 
-/* --- Card hover: lift, orange edge-glow, and a light sweep --- */
-.skill-card, .stat-card, .exp-card, .achievement-card, .edu-row, .project-row {
+.section {
   position: relative;
-  overflow: hidden;
-  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+  overflow-x: clip;
+  padding: 120px 0;
+  border-top: 1px solid var(--border);
 }
-.skill-card:hover, .stat-card:hover, .exp-card:hover,
-.achievement-card:hover, .edu-row:hover, .project-row:hover {
-  border-color: rgba(255, 107, 61, 0.4) !important;
-  box-shadow: 0 18px 50px -18px rgba(255, 107, 61, 0.35),
-              inset 0 0 0 1px rgba(255, 107, 61, 0.08);
+.section-head { position: relative; margin-bottom: 56px; }
+.section-head .eyebrow { margin-bottom: 22px; }
+
+/* ============================================================
+   Cards (dark surface)
+   ============================================================ */
+.card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(245, 241, 234, 0.045) 0%, rgba(245, 241, 234, 0.012) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  transition: border-color 0.35s var(--ease-expo),
+              box-shadow 0.35s var(--ease-expo),
+              transform 0.35s var(--ease-expo);
 }
-.skill-card::after, .stat-card::after, .exp-card::after,
-.achievement-card::after, .edu-row::after, .project-row::after {
-  content: '';
-  position: absolute; top: 0; left: -130%;
+.card:hover {
+  border-color: rgba(255, 107, 61, 0.4);
+  box-shadow: 0 18px 50px -18px rgba(255, 107, 61, 0.3),
+              inset 0 0 0 1px rgba(255, 107, 61, 0.06);
+  transform: translateY(-3px);
+}
+/* corner ticks (PCB dressing) — one pseudo, ::after stays free for the sweep */
+.corner-ticks::before {
+  content: ""; position: absolute; inset: 12px;
+  pointer-events: none; opacity: 0.5; z-index: 1;
+  background:
+    linear-gradient(var(--border-hi), var(--border-hi)) left top / 10px 1px,
+    linear-gradient(var(--border-hi), var(--border-hi)) left top / 1px 10px,
+    linear-gradient(var(--border-hi), var(--border-hi)) right bottom / 10px 1px,
+    linear-gradient(var(--border-hi), var(--border-hi)) right bottom / 1px 10px;
+  background-repeat: no-repeat;
+}
+
+/* light sweep on hover (v1 signature) — IC cards keep their pin glow instead */
+.card:not(.ic-card), .paper { overflow: hidden; }
+.card:not(.ic-card)::after, .paper::after {
+  content: ""; position: absolute; top: 0; left: -130%;
   width: 60%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(245, 241, 234, 0.10), transparent);
+  background: linear-gradient(100deg, transparent, rgba(245, 241, 234, 0.09), transparent);
   transform: skewX(-18deg);
   transition: left 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none; z-index: 3;
 }
-.skill-card:hover::after, .stat-card:hover::after, .exp-card:hover::after,
-.achievement-card:hover::after, .edu-row:hover::after, .project-row:hover::after {
-  left: 150%;
+.card:not(.ic-card):hover::after, .paper:hover::after { left: 150%; }
+
+/* Chips ----------------------------------------------------- */
+.chip {
+  font-family: var(--mono); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--surface-hi); border: 1px solid var(--border);
+  color: var(--text-dim);
+  /* long labels wrap instead of clipping at the card edge */
+  white-space: normal; max-width: 100%;
 }
 
-/* --- Tech marquee band --- */
-.marquee {
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 22px 0;
-  border-top: 1px solid rgba(245, 241, 234, 0.08);
-  border-bottom: 1px solid rgba(245, 241, 234, 0.08);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+/* IC skill package ------------------------------------------ */
+.ic-card { padding: 30px 28px; height: 100%; }
+.ic-card .ref {
+  position: absolute; top: 18px; right: 20px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  color: var(--text-muted);
 }
-.marquee > span {
-  display: inline-block;
-  will-change: transform;
-  animation: marquee-scroll 42s linear infinite;
+.ic-pin {
+  position: absolute; width: 8px; height: 1.5px;
+  background: var(--border-hi);
+  transform: scaleX(0);
+  transition: background 0.18s ease, transform 0.3s var(--ease-expo), box-shadow 0.18s ease;
 }
-.marquee.reverse > span { animation-direction: reverse; }
-.marquee:hover > span { animation-play-state: paused; }
-.marquee > span > span {
-  font-family: 'Instrument Serif', serif;
-  font-size: 28px;
-  padding: 0 26px;
-  color: rgba(245, 241, 234, 0.5);
+.ic-pin.l { transform-origin: right; }
+.ic-pin.r { transform-origin: left; }
+.reveal.in .ic-pin { transform: scaleX(1); }
+.ic-card:hover .ic-pin {
+  background: var(--pin, var(--accent));
+  box-shadow: 0 0 8px var(--pin, var(--accent));
 }
-.marquee > span > span.accent { color: #ff6b3d; font-style: italic; }
-@keyframes marquee-scroll {
+.ic-card {
+  transition: transform 0.18s ease,
+              border-color 0.35s var(--ease-expo),
+              box-shadow 0.35s var(--ease-expo);
+}
+.ic-card:hover { transform: translateY(1px); } /* the chip "seats" */
+.ic-card .ic-icon {
+  width: 44px; height: 44px; border-radius: 11px;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); margin-bottom: 22px;
+}
+
+/* ============================================================
+   Paper dossiers (Project Rail) + detail pages
+   ============================================================ */
+.paper {
+  background: var(--paper); color: var(--paper-ink);
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+  transition: transform 0.35s var(--ease-expo), box-shadow 0.35s var(--ease-expo);
+}
+.paper:hover {
+  transform: translateY(-4px) rotate(0.4deg);
+  box-shadow: 0 40px 70px -28px rgba(0, 0, 0, 0.8), 0 0 30px -12px rgba(255, 107, 61, 0.35);
+}
+.stamp {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent-dim);
+  padding: 6px 12px; border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  transform: rotate(-8deg);
+  background: rgba(255, 107, 61, 0.06);
+}
+
+/* ============================================================
+   THE TRACE
+   ============================================================ */
+.trace-path {
+  fill: none; stroke: var(--accent); stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px rgba(255, 107, 61, 0.55));
+}
+.trace-dim { stroke: var(--border-hi); filter: none; }
+.via {
+  fill: var(--bg); stroke: var(--border-hi); stroke-width: 1.5;
+  transition: stroke 0.4s ease, fill 0.4s ease;
+}
+.via.lit { stroke: var(--accent); fill: var(--accent-soft); }
+
+/* Scroll progress hairline ---------------------------------- */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+  background: var(--accent); transform-origin: left; transform: scaleX(0);
+  z-index: 200; box-shadow: 0 0 8px var(--accent);
+}
+
+/* ============================================================
+   Grain overlay (stepped flicker ~10fps)
+   ============================================================ */
+.grain {
+  position: fixed; inset: -50%; z-index: 3; pointer-events: none;
+  width: 200%; height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.04; mix-blend-mode: overlay;
+  animation: grain-flicker 0.8s steps(1) infinite;
+}
+@keyframes grain-flicker {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-8%, 4%); }
+  40%  { transform: translate(6%, -6%); }
+  60%  { transform: translate(-4%, 8%); }
+  80%  { transform: translate(8%, 2%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Glow orbs ------------------------------------------------- */
+.glow-orb {
+  position: fixed; border-radius: 50%; pointer-events: none;
+  z-index: 0; filter: blur(90px);
+}
+
+/* ============================================================
+   Reveal / MaskLines / SlideDock (vanilla)
+   ============================================================ */
+.reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.56s var(--ease-expo), transform 0.56s var(--ease-expo);
+}
+.reveal.in { opacity: 1; transform: none; }
+
+/* pad the clip box so italic tails and descenders (g, y, j) survive the mask */
+.maskline {
+  display: block; overflow: hidden;
+  padding-bottom: 0.16em; margin-bottom: -0.16em;
+  padding-right: 0.12em; margin-right: -0.12em;
+}
+.maskline > span {
+  display: block; transform: translateY(110%);
+  transition: transform 0.7s var(--ease-mask);
+}
+.maskline.in > span { transform: none; }
+
+.slidedock {
+  opacity: 0;
+  transition: opacity 0.65s var(--ease-expo), transform 0.65s var(--ease-expo);
+}
+.slidedock.from-left  { transform: translateX(-96px) rotate(-1.5deg); }
+.slidedock.from-right { transform: translateX(96px) rotate(1.5deg); }
+.slidedock.in { opacity: 1; transform: none; }
+
+.stamp-in {
+  opacity: 0; transform: scale(1.4) rotate(var(--rot, -8deg));
+  transition: opacity 0.5s var(--ease-back), transform 0.5s var(--ease-back);
+}
+.stamp-in.in { opacity: 1; transform: rotate(var(--rot, -8deg)); }
+
+/* ============================================================
+   Docking choreography (sparks, cascades, rolls)
+   ============================================================ */
+@keyframes spark-fly {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* chips cascade in 30ms apart once their parent reveals/docks */
+.cascade .chip, .cascade .mchip {
+  opacity: 0; transform: translateY(9px) scale(0.96);
+  transition: opacity 0.35s var(--ease-expo), transform 0.35s var(--ease-expo);
+}
+.reveal.in .cascade .chip, .slidedock.in .cascade .chip,
+.reveal.in .cascade .mchip, .slidedock.in .cascade .mchip {
+  opacity: 1; transform: none;
+}
+
+/* experience bullets cascade from the right, dash draws in */
+.exp-li {
+  opacity: 0; transform: translateX(26px);
+  transition: opacity 0.45s var(--ease-expo), transform 0.45s var(--ease-expo);
+}
+.slidedock.in .exp-li { opacity: 1; transform: none; }
+.exp-dash {
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s var(--ease-expo);
+}
+.slidedock.in .exp-dash { transform: scaleX(1); }
+
+/* HUD file-name flip */
+.hud-pop { display: inline-block; animation: hud-pop 0.4s var(--ease-back); }
+@keyframes hud-pop {
+  0% { opacity: 0; transform: translateY(6px) scale(1.15); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* rail pulse tail dots */
+.pulse-tail { position: absolute; left: 50%; top: 0; border-radius: 50%; background: var(--accent); pointer-events: none; }
+
+/* ============================================================
+   Marquee band
+   ============================================================ */
+.marquee-band { padding: 60px 0; overflow: hidden; position: relative; }
+.marquee-row { display: flex; white-space: nowrap; width: max-content; will-change: transform; }
+.marquee-row.a { animation: marquee-x 40s linear infinite; }
+.marquee-row.b { animation: marquee-x 60s linear infinite reverse; }
+.marquee-word {
+  font-family: var(--serif); font-size: clamp(48px, 10vw, 150px);
+  line-height: 1; color: transparent;
+  -webkit-text-stroke: 1px var(--border-hi);
+  padding: 0 0.28em;
+}
+.marquee-word.solid { color: var(--accent); -webkit-text-stroke: 0; }
+.marquee-mono {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em;
+  color: var(--text-muted); opacity: 0.55; padding: 0 22px;
+}
+@keyframes marquee-x {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
 
-/* --- Animated accent glow on headline accent words --- */
-.glow { animation: glow-pulse 4.5s ease-in-out infinite; }
-@keyframes glow-pulse {
-  0%, 100% { text-shadow: 0 0 60px rgba(255, 107, 61, 0.35); }
-  50%      { text-shadow: 0 0 95px rgba(255, 107, 61, 0.6); }
+/* ============================================================
+   Footer LED
+   ============================================================ */
+.footer-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 12px var(--accent);
+  cursor: pointer;
+}
+.footer-led.pulsing { animation: led-pulse 0.8s ease-in-out 3; }
+@keyframes led-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px var(--accent); }
+  50% { transform: scale(1.7); box-shadow: 0 0 22px var(--accent); }
+}
+.footer-led.rest { animation: led-rest 2.6s ease-in-out infinite; }
+@keyframes led-rest {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-/* --- Ambient orbs drift slowly for a living background --- */
-.ambient-orb { animation: orb-drift 20s ease-in-out infinite alternate; }
-@keyframes orb-drift {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(40px, -30px) scale(1.12); }
+/* Scroll cue ------------------------------------------------ */
+.scroll-cue-dot { animation: cue-bob 2s ease-in-out infinite; }
+@keyframes cue-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(6px); opacity: 1; }
 }
 
-/* --- Scroll cue chevron bounce --- */
-.scroll-cue-chevron { animation: cue-bounce 1.8s ease-in-out infinite; }
-@keyframes cue-bounce {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50%      { transform: translateY(6px); opacity: 1; }
+/* Envelope launch (Now Building) ---------------------------- */
+@keyframes scan-sheen {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
 }
 
-/* --- Accessibility: 44px tap targets on touch devices --- */
-@media (hover: none), (pointer: coarse) {
-  .nav-toggle, .nav-cta, .hero-cta, .resume-button, .contact-socials a {
-    min-height: 44px;
-  }
-  .marquee > span { animation-duration: 28s; }
+/* ============================================================
+   Debug HUD
+   ============================================================ */
+.debug-hud {
+  position: fixed; bottom: 14px; left: 14px; z-index: 9000;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--text-dim); background: rgba(26, 24, 21, 0.85);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; line-height: 1.7; pointer-events: none;
+}
+.debug-hud b { color: var(--accent); font-weight: 500; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+.nav-toggle { display: none; }
+
+@media (max-width: 1024px) {
+  .container { padding: 0 24px; }
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .hero-3d { display: none !important; }
+  .about-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
 }
 
-/* --- Respect reduced-motion preferences --- */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .section { padding: 78px 0; }
+  /* lateral doctrine, mobile: everything docks from the right, ±24px */
+  .slidedock.from-left, .slidedock.from-right { transform: translateX(24px) rotate(0.8deg); }
+  .slidedock.in { transform: none; }
+  .nav-links { display: none !important; }
+  .nav-toggle { display: inline-flex !important; }
+  .ghost-num { font-size: 90px; opacity: 0.4; }
+  .section-head { margin-bottom: 40px; }
+  .rail-track { padding-left: 34px !important; }
+  .dossier-row { grid-template-columns: 1fr !important; }
+  .dossier-row .rail-col { display: none !important; }
+  .marquee-word { font-size: 15vw; }
+  .footer-row { flex-direction: column; gap: 10px; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+}
+
+/* ============================================================
+   v2 wiring — hero underline, ital, rail, dossiers, paper chips
+   ============================================================ */
+section[id] { scroll-margin-top: 80px; }
+
+.ital {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+/* trace underline under the hero name (ScatterText underline) */
+.name-underline {
+  position: absolute; left: 2%; right: 2%; bottom: 0.03em; height: 2px;
+  background: var(--accent); box-shadow: 0 0 10px var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  animation: underline-draw 0.8s var(--ease-expo) 1.4s forwards;
+}
+@keyframes underline-draw { to { transform: scaleX(1); } }
+
+/* achievement icons stamp in once their card docks */
+.stamp-icon {
+  opacity: 0; transform: scale(1.4) rotate(-6deg);
+  transition: opacity 0.5s var(--ease-back) 0.25s, transform 0.5s var(--ease-back) 0.25s;
+}
+.slidedock.in .stamp-icon { opacity: 1; transform: scale(1) rotate(-6deg); }
+
+/* mono ink chips on paper dossiers */
+.mchip {
+  font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 4px 9px; border: 1px solid var(--paper-line);
+  border-radius: 6px; color: rgba(31, 30, 29, 0.72); white-space: nowrap;
+}
+
+/* THE PROJECT RAIL ------------------------------------------ */
+.rail-spine {
+  position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
+  transform: translateX(-1px); overflow: visible; pointer-events: none;
+}
+.rail-pulse {
+  position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(255, 107, 61, 0.5);
+  z-index: 4; pointer-events: none;
+}
+.rail-hud {
+  position: sticky; top: 84px; z-index: 6; height: 0;
+  display: flex; justify-content: flex-end; pointer-events: none;
+}
+.dossier-card-l { grid-column: 1; justify-self: end; }
+.dossier-card-r { grid-column: 3; justify-self: start; }
+.rail-col { grid-column: 2; position: relative; align-self: stretch; min-height: 64px; }
+.rail-stub {
+  position: absolute; top: 50%; height: 1.5px; width: 50%;
+  background: var(--border-hi);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.rail-stub.left { right: 50%; }
+.rail-stub.right { left: 50%; }
+.rail-stub.lit { background: var(--accent); box-shadow: 0 0 8px rgba(255, 107, 61, 0.6); }
+.rail-via {
+  position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  border: 1.5px solid var(--border-hi); background: var(--bg); z-index: 3;
+  transition: border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+}
+.rail-via.lit {
+  border-color: var(--accent); background: var(--accent-soft);
+  box-shadow: 0 0 12px rgba(255, 107, 61, 0.7);
+}
+
+@media (max-width: 768px) {
+  .rail-spine, .rail-pulse { left: 15px; }
+  .rail-hud { display: none; }
+  .dossier-card-l, .dossier-card-r { grid-column: 1; justify-self: stretch; }
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .marquee > span, .glow, .ambient-orb, .scroll-cue-chevron {
-    animation: none !important;
-  }
-  .skill-card::after, .stat-card::after, .exp-card::after,
-  .achievement-card::after, .edu-row::after, .project-row::after {
-    display: none;
-  }
+  html { scroll-behavior: auto; }
+  .reveal, .slidedock { opacity: 1 !important; transform: none !important; }
+  .maskline > span { transform: none !important; }
+  .stamp-in { opacity: 1 !important; transform: rotate(var(--rot, -8deg)) !important; }
+  .grain { animation: none !important; }
+  .marquee-row { animation: none !important; transform: none !important; }
+  .head-xl .ital { animation: none !important; }
+  .footer-led.pulsing, .footer-led.rest, .scroll-cue-dot { animation: none !important; }
+  .scroll-progress { display: none !important; }
+  .cascade .chip, .cascade .mchip, .exp-li { opacity: 1 !important; transform: none !important; }
+  .exp-dash, .ic-pin { transform: scaleX(1) !important; }
+  .hud-pop { animation: none !important; }
+  .card:not(.ic-card)::after, .paper::after { display: none !important; }
+  .pulse-tail { display: none !important; }
+  .rail-pulse { display: none !important; }
+  .name-underline { animation: none !important; transform: scaleX(1) !important; }
+  .stamp-icon { opacity: 1 !important; transform: rotate(-6deg) !important; }
+  .eyebrow .led { animation: none !important; }
+  .paper:hover, .card:hover { transform: none !important; }
 }

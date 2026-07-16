@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  // A stray package-lock.json exists in the home directory; pin the
+  // workspace root so Turbopack doesn't guess wrong.
+  turbopack: {
+    root: import.meta.dirname,
+  },
 };
 
 export default nextConfig;

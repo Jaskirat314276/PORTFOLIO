@@ -2,18 +2,32 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import * as THREE from 'three';
 import { projects } from './projects/data';
 import Nav from './components/Nav';
-import CustomCursor from './components/CustomCursor';
 import BackgroundScene from './components/BackgroundScene';
+import TiltCard from './components/TiltCard';
+import GlowField from './components/GlowField';
+import GrainOverlay from './components/GrainOverlay';
+import ScrollProgress from './components/ScrollProgress';
+import DebugHUD from './components/DebugHUD';
 import Magnetic from './components/Magnetic';
 import Reveal from './components/Reveal';
-import TiltCard from './components/TiltCard';
+import ScatterText from './components/ScatterText';
+import ScrambleText from './components/ScrambleText';
+import MaskLines from './components/MaskLines';
+import Odometer from './components/Odometer';
+import SlideDock from './components/SlideDock';
+import Spark from './components/Spark';
+import Stamp from './components/Stamp';
+import VelocityMarquee from './components/VelocityMarquee';
+import { VerticalTrace, IntersectionBeat, useScrollProgress } from './components/Trace';
+import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/ScrollBands';
+import { RAIL_THRESHOLDS } from './lib/motion';
+import { useReducedMotion } from './lib/useReducedMotion';
 import {
-  Github, Linkedin, Mail, ArrowUpRight, Download, Phone, MapPin,
+  Github, Linkedin, ArrowUpRight, Download, Phone, MapPin,
   Code2, Database, Cloud, Cpu, Zap, Brain, Award, GraduationCap,
-  Briefcase, Trophy, FolderGit2, Sparkles, ChevronDown, Bot
+  Briefcase, Trophy, Sparkles, ChevronDown, Bot, FolderGit2,
 } from 'lucide-react';
 
 const RESUMES = [
@@ -38,13 +52,13 @@ const ResumeDropdown = () => {
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
+        data-cursor="press"
         onClick={() => setOpen((v) => !v)}
-        className="resume-button"
         style={{
-          padding: '14px 28px', border: '1px solid rgba(245,241,234,0.2)',
-          borderRadius: '999px', fontSize: '14px', fontWeight: 500,
+          padding: '14px 28px', border: '1px solid var(--border-hi)',
+          borderRadius: 999, fontSize: 14, fontWeight: 500,
           background: 'transparent', color: 'inherit', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '8px',
+          display: 'flex', alignItems: 'center', gap: 8,
         }}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -60,25 +74,27 @@ const ResumeDropdown = () => {
           role="menu"
           style={{
             position: 'absolute', top: 'calc(100% + 8px)', left: 0,
-            minWidth: '240px', padding: '8px',
-            background: '#0f0f12', border: '1px solid rgba(245,241,234,0.15)',
-            borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+            minWidth: 240, padding: 8,
+            background: 'var(--surface-hi)', border: '1px solid var(--border-hi)',
+            borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             zIndex: 50,
           }}
         >
-          {RESUMES.map((r) => (
+          {RESUMES.map((r, i) => (
             <a
               key={r.file}
               href={r.file}
               download
               role="menuitem"
+              data-cursor="press"
               onClick={() => setOpen(false)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '12px 14px', borderRadius: '10px',
-                fontSize: '14px', color: '#f5f1ea', textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '12px 14px', borderRadius: 10,
+                fontSize: 14, color: 'var(--text)',
+                animation: `hud-pop 0.35s var(--ease-back) ${i * 0.06}s both`,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,241,234,0.08)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-soft)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <Download size={14} /> {r.label}
@@ -90,311 +106,88 @@ const ResumeDropdown = () => {
   );
 };
 
-
-// ============================================================
-// 3D HERO — Icosahedron with edges, particles, chromatic glow
-// ============================================================
-const HeroScene = () => {
-  const mountRef = useRef(null);
+// footer LED: pulses three times when it enters view, then rests lit
+const FooterLed = () => {
+  const ref = useRef(null);
+  const [mode, setMode] = useState('idle');
 
   useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-
-    const w = mount.clientWidth;
-    const h = mount.clientHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.domElement.style.display = 'block';
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-    mount.appendChild(renderer.domElement);
-
-    // Main icosahedron — slightly translucent
-    const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
-    const icoMat = new THREE.MeshStandardMaterial({
-      color: 0xff6b3d,
-      metalness: 0.7,
-      roughness: 0.2,
-      flatShading: true,
-      transparent: true,
-      opacity: 0.85,
-    });
-    const ico = new THREE.Mesh(icoGeo, icoMat);
-    scene.add(ico);
-
-    // Edge lines for that wireframe-on-solid look
-    const edges = new THREE.EdgesGeometry(icoGeo);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
-    const wireframe = new THREE.LineSegments(edges, lineMat);
-    scene.add(wireframe);
-
-    // Outer wireframe sphere
-    const outerGeo = new THREE.IcosahedronGeometry(2.5, 1);
-    const outerEdges = new THREE.EdgesGeometry(outerGeo);
-    const outerMat = new THREE.LineBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.2 });
-    const outerWire = new THREE.LineSegments(outerEdges, outerMat);
-    scene.add(outerWire);
-
-    // Tilted orbital rings — adds planetary depth around the core
-    const ringGeo = new THREE.TorusGeometry(2.1, 0.012, 16, 140);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff6b3d, transparent: true, opacity: 0.55 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI * 0.42;
-    scene.add(ring);
-
-    const ring2Geo = new THREE.TorusGeometry(2.1, 0.009, 16, 140);
-    const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x5b9eff, transparent: true, opacity: 0.35 });
-    const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
-    ring2.rotation.x = Math.PI * 0.42;
-    ring2.rotation.y = Math.PI * 0.5;
-    scene.add(ring2);
-
-    // Inner counter-rotating core that pulses with the icosahedron
-    const coreGeo = new THREE.OctahedronGeometry(0.55, 0);
-    const coreEdges = new THREE.EdgesGeometry(coreGeo);
-    const coreMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 });
-    const core = new THREE.LineSegments(coreEdges, coreMat);
-    scene.add(core);
-
-    // Particle galaxy
-    const pGeo = new THREE.BufferGeometry();
-    const pCount = 800;
-    const positions = new Float32Array(pCount * 3);
-    const colors = new Float32Array(pCount * 3);
-    for (let i = 0; i < pCount; i++) {
-      const r = 3 + Math.random() * 4;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos((Math.random() * 2) - 1);
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
-      const mix = Math.random();
-      colors[i * 3] = 1 * mix + 0.3 * (1 - mix);
-      colors[i * 3 + 1] = 0.4 * mix + 0.6 * (1 - mix);
-      colors[i * 3 + 2] = 0.2 * mix + 1 * (1 - mix);
-    }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    pGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const pMat = new THREE.PointsMaterial({
-      size: 0.03, transparent: true, opacity: 0.7, vertexColors: true, blending: THREE.AdditiveBlending,
-    });
-    const particles = new THREE.Points(pGeo, pMat);
-    scene.add(particles);
-
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const l1 = new THREE.PointLight(0xff6b3d, 5, 15);
-    l1.position.set(3, 3, 3);
-    scene.add(l1);
-    const l2 = new THREE.PointLight(0x5b9eff, 3, 15);
-    l2.position.set(-3, -2, 2);
-    scene.add(l2);
-    const l3 = new THREE.PointLight(0xffffff, 1.5, 15);
-    l3.position.set(0, 4, -3);
-    scene.add(l3);
-
-    // Mouse parallax
-    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
-    const onMove = (e) => {
-      const rect = mount.getBoundingClientRect();
-      mouse.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      mouse.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    };
-    mount.addEventListener('mousemove', onMove);
-
-    let frameId;
-    const clock = new THREE.Clock();
-    const animate = () => {
-      const t = clock.getElapsedTime();
-      mouse.x += (mouse.tx - mouse.x) * 0.05;
-      mouse.y += (mouse.ty - mouse.y) * 0.05;
-
-      ico.rotation.x = t * 0.2 + mouse.y * 0.5;
-      ico.rotation.y = t * 0.3 + mouse.x * 0.5;
-      wireframe.rotation.copy(ico.rotation);
-
-      outerWire.rotation.x = -t * 0.1;
-      outerWire.rotation.y = t * 0.15;
-
-      particles.rotation.y = t * 0.05;
-      particles.rotation.x = t * 0.03;
-
-      // Orbital rings spin on their own axes
-      ring.rotation.z = t * 0.3;
-      ring2.rotation.z = -t * 0.25;
-
-      // Inner core counter-rotates and pulses
-      core.rotation.x = -t * 0.5;
-      core.rotation.y = -t * 0.4;
-      const cs = 1 + Math.sin(t * 2) * 0.1;
-      core.scale.set(cs, cs, cs);
-
-      // Pulsate scale
-      const s = 1 + Math.sin(t * 1.5) * 0.03;
-      ico.scale.set(s, s, s);
-      wireframe.scale.set(s, s, s);
-
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const onResize = () => {
-      const nw = mount.clientWidth;
-      const nh = mount.clientHeight;
-      if (nw === 0 || nh === 0) return;
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh, false);
-    };
-    window.addEventListener('resize', onResize);
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
-    if (ro) ro.observe(mount);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', onResize);
-      if (ro) ro.disconnect();
-      mount.removeEventListener('mousemove', onMove);
-      mount.removeChild(renderer.domElement);
-      icoGeo.dispose(); icoMat.dispose(); edges.dispose(); lineMat.dispose();
-      outerGeo.dispose(); outerEdges.dispose(); outerMat.dispose();
-      ringGeo.dispose(); ringMat.dispose(); ring2Geo.dispose(); ring2Mat.dispose();
-      coreGeo.dispose(); coreEdges.dispose(); coreMat.dispose();
-      pGeo.dispose(); pMat.dispose(); renderer.dispose();
-    };
+    const el = ref.current;
+    if (!el) return;
+    const ob = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setMode('pulsing'); ob.disconnect(); } },
+      { threshold: 0.4 }
+    );
+    ob.observe(el);
+    return () => ob.disconnect();
   }, []);
 
-  return <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />;
-};
-
-// ============================================================
-// MAGNETIC BUTTON — Pulls toward cursor on hover
-// ============================================================
-// ============================================================
-// TILT CARD with depth and glow
-// ============================================================
-// ============================================================
-// COUNT-UP NUMBER
-// ============================================================
-const CountUp = ({ end, suffix = '' }) => {
-  const ref = useRef(null);
-  const [n, setN] = useState(0);
   useEffect(() => {
-    const ob = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        const dur = 1800;
-        const start = performance.now();
-        const tick = (now) => {
-          const p = Math.min((now - start) / dur, 1);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setN(Math.floor(end * eased));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-        ob.disconnect();
-      }
-    }, { threshold: 0.5 });
-    if (ref.current) ob.observe(ref.current);
-    return () => ob.disconnect();
-  }, [end]);
-  return <span ref={ref}>{n}{suffix}</span>;
-};
+    if (mode !== 'pulsing') return;
+    const t = setTimeout(() => setMode('rest'), 2500);
+    return () => clearTimeout(t);
+  }, [mode]);
 
-// ============================================================
-// SECTION EYEBROW — numbered editorial label (01 — About me)
-// ============================================================
-const SectionEyebrow = ({ index, children }) => (
-  <div className="section-eyebrow" style={{
-    fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-    color: '#ff6b3d', marginBottom: '24px',
-    display: 'flex', alignItems: 'center', gap: '14px',
-  }}>
-    <span style={{
-      fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-      fontSize: '24px', letterSpacing: 'normal', textTransform: 'none',
-      opacity: 0.65,
-    }}>{index}</span>
-    <span style={{ width: '28px', height: '1px', background: '#ff6b3d', opacity: 0.5 }} />
-    {children}
-  </div>
-);
-
-// ============================================================
-// MARQUEE — continuously scrolling tech ticker (hover to pause)
-// ============================================================
-const Marquee = ({ items, reverse = false }) => {
-  const loop = [...items, ...items];
   return (
-    <div className={`marquee${reverse ? ' reverse' : ''}`} aria-hidden="true">
-      <span>
-        {loop.map((it, i) => (
-          <span key={i} className={i % 3 === 1 ? 'accent' : undefined}>
-            {it}<span style={{ opacity: 0.3, padding: '0 4px' }}>✦</span>
-          </span>
-        ))}
-      </span>
-    </div>
+    <span
+      ref={ref}
+      id="footer-led"
+      className={`footer-led ${mode === 'pulsing' ? 'pulsing' : mode === 'rest' ? 'rest' : ''}`}
+      aria-hidden="true"
+    />
   );
 };
 
+const STAMPS = ['FLAGSHIP · 2026', 'SHIPPED', 'LIVE DEMO', 'LIVE DEMO', 'HARDWARE · 300V TESTED', 'SIMULATION'];
+const PIN_TOPS = ['26%', '44%', '62%', '80%'];
+
 // ============================================================
-// MAIN PORTFOLIO
+// MAIN PORTFOLIO — THE TRACE
 // ============================================================
 export default function Portfolio() {
-  const marqueeItems = [
-    'React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'LangChain',
-    'RAG', 'Power Electronics', 'Three.js', 'SQL', 'Docker', 'C++',
-    'AI / ML', 'Tailwind', 'Power BI', 'IoT',
-  ];
+  const reduced = useReducedMotion();
+
+  // hero kinetic type waits for the boot preloader to finish
+  const [heroIn, setHeroIn] = useState(false);
+  useEffect(() => {
+    const on = () => setHeroIn(true);
+    window.addEventListener('js:boot-done', on);
+    // boot already done (session replay) → next tick; else hard cap so the hero never stays blank
+    const t = setTimeout(on, window.__bootDone ? 0 : 3800);
+    return () => { window.removeEventListener('js:boot-done', on); clearTimeout(t); };
+  }, []);
+
+  // experience spine + project rail scroll scrub
+  const expRef = useRef(null);
+  const expP = useScrollProgress(expRef, { startAt: 0.85, endAt: 0.35 });
+  const railRef = useRef(null);
+  const railP = useScrollProgress(railRef, { startAt: 0.8, endAt: 0.25 });
+  useEffect(() => { window.__traceProgress = railP; }, [railP]);
+
+  const [expDocked, setExpDocked] = useState([false, false, false]);
+  const [railDocked, setRailDocked] = useState(() => projects.map(() => false));
+  const dockExp = (i) => setExpDocked((a) => a.map((v, j) => (j === i ? true : v)));
+  const dockRail = (i) => setRailDocked((a) => a.map((v, j) => (j === i ? true : v)));
+
+  const litCount = RAIL_THRESHOLDS.filter((t) => railP >= t).length;
+  const hudFile = Math.max(1, Math.min(projects.length, litCount || 1));
 
   const stats = [
     { value: 6, suffix: '+', label: 'Projects Built', icon: <FolderGit2 size={20} /> },
-    { value: 300, suffix: '+', label: 'LeetCode Problems', icon: <Code2 size={20} /> },
+    { value: 300, suffix: '+', label: 'LeetCode Problems', icon: <Code2 size={20} />, gag: true },
     { value: 2, suffix: '+', label: 'Years Coding', icon: <Sparkles size={20} /> },
     { value: 200, suffix: '+', label: 'Students Mentored', icon: <Award size={20} /> },
   ];
 
   const skills = [
-    {
-      cat: 'Frontend', icon: <Code2 size={22} />, color: '#ff6b3d',
-      items: ['React.js', 'Next.js', 'TypeScript', 'JavaScript', 'Tailwind CSS', 'HTML / CSS'],
-    },
-    {
-      cat: 'Backend', icon: <Cpu size={22} />, color: '#5b9eff',
-      items: ['Node.js', 'REST APIs', 'C++', 'C', 'Python'],
-    },
-    {
-      cat: 'Data & ML', icon: <Brain size={22} />, color: '#a855f7',
-      items: ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Structured Query Language(SQL)', 'Statsmodels (SARIMA)', 'Power BI', 'Excel'],
-    },
-    {
-      cat: 'GenAI & LLM', icon: <Bot size={22} />, color: '#a78bfa',
-      items: ['LangChain', 'RAG', 'OpenAI', 'LLaMA 3.2', 'VectorDB', 'AnthropicAI API', 'OpenAI API', 'Prompt Engineering'],
-    },
-    {
-      cat: 'Databases', icon: <Database size={22} />, color: '#10b981',
-      items: ['MySQL', 'Prisma ORM', 'Supabase', 'VectorDB'],
-    },
-    {
-      cat: 'Cloud & DevOps', icon: <Cloud size={22} />, color: '#06b6d4',
-      items: ['Docker', 'Prometheus', 'Terraform', 'AWS(Amazon Web Service'],
-    },
-    {
-      cat: 'CS Fundamentals', icon: <Sparkles size={22} />, color: '#f59e0b',
-      items: ['Data Structure Algorithm', 'Object Oriented Programming', 'Database Management System', 'Operating Systems', 'Computer Networks'],
-    },
-    {
-      cat: 'Core Electrical', icon: <Zap size={22} />, color: '#eab308',
-      items: ['MATLAB / Simulink', 'Eagle PCB Design', 'Power Electronics','IoT'],
-    },
+    { cat: 'Frontend', icon: <Code2 size={22} />, items: ['React.js', 'Next.js', 'TypeScript', 'JavaScript', 'Tailwind CSS', 'HTML / CSS'] },
+    { cat: 'Backend', icon: <Cpu size={22} />, items: ['Node.js', 'REST APIs', 'C++', 'C', 'Python'] },
+    { cat: 'Data & ML', icon: <Brain size={22} />, items: ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Structured Query Language (SQL)', 'Statsmodels (SARIMA)', 'Power BI', 'Excel'] },
+    { cat: 'GenAI & LLM', icon: <Bot size={22} />, items: ['LangChain', 'RAG', 'OpenAI', 'LLaMA 3.2', 'VectorDB', 'AnthropicAI API', 'OpenAI API', 'Prompt Engineering'] },
+    { cat: 'Databases', icon: <Database size={22} />, items: ['MySQL', 'Prisma ORM', 'Supabase', 'VectorDB'] },
+    { cat: 'Cloud & DevOps', icon: <Cloud size={22} />, items: ['Docker', 'Prometheus', 'Terraform', 'AWS (Amazon Web Services)'] },
+    { cat: 'CS Fundamentals', icon: <Sparkles size={22} />, items: ['Data Structure Algorithm', 'Object Oriented Programming', 'Database Management System', 'Operating Systems', 'Computer Networks'] },
+    { cat: 'Core Electrical', icon: <Zap size={22} />, items: ['MATLAB / Simulink', 'Eagle PCB Design', 'Power Electronics', 'IoT'] },
   ];
 
   const experience = [
@@ -444,568 +237,551 @@ export default function Portfolio() {
   ];
 
   const education = [
-    {
-      degree: 'B.Tech in Electrical & Electronics Engineering',
-      school: 'Birla Institute of Technology, Mesra',
-      date: 'Nov 2022 — May 2026',
-      grade: 'CGPA: 7.15',
-      location: 'Ranchi, Jharkhand',
-    },
-    {
-      degree: 'Class XII — CBSE',
-      school: 'Munam Public School',
-      date: '2019 — 2021',
-      grade: 'Percentage: 95%',
-      location: 'Hazaribagh, Jharkhand',
-    },
-    {
-      degree: 'Class X — CBSE',
-      school: 'Angels High School',
-      date: 'Completed 2019',
-      grade: 'Percentage: 91%',
-      location: 'Hazaribagh, Jharkhand',
-    },
+    { degree: 'B.Tech in Electrical & Electronics Engineering', school: 'Birla Institute of Technology, Mesra', date: 'Nov 2022 — May 2026', grade: 'CGPA: 7.15', location: 'Ranchi, Jharkhand' },
+    { degree: 'Class XII — CBSE', school: 'Munam Public School', date: '2019 — 2021', grade: 'Percentage: 95%', location: 'Hazaribagh, Jharkhand' },
+    { degree: 'Class X — CBSE', school: 'Angels High School', date: 'Completed 2019', grade: 'Percentage: 91%', location: 'Hazaribagh, Jharkhand' },
+  ];
+
+  const socials = [
+    { icon: <Github size={16} />, label: 'GitHub', href: 'https://github.com/Jaskirat314276' },
+    { icon: <Linkedin size={16} />, label: 'LinkedIn', href: 'https://www.linkedin.com/in/jaskirat-singh-b644a4255/' },
+    { icon: <Code2 size={16} />, label: 'LeetCode · Jaskirat-singh', href: 'https://leetcode.com/Jaskirat-singh' },
+    { icon: <Code2 size={16} />, label: 'GeeksforGeeks · jaskiratsi2k1r', href: 'https://www.geeksforgeeks.org/user/jaskiratsi2k1r' },
+    { icon: <Phone size={16} />, label: '+91 8340361891', href: 'tel:+918340361891' },
   ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#08080a',
-      color: '#f5f1ea',
-      fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-      overflow: 'hidden',
-      position: 'relative',
-      cursor: 'none',
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        @media (hover: hover) and (pointer: fine) {
-          body { cursor: none; }
-          a, button { cursor: none; }
-        }
-        a { color: inherit; text-decoration: none; }
-        .glow { text-shadow: 0 0 60px rgba(255, 107, 61, 0.4); }
-      `}</style>
-
-      <CustomCursor />
-
-      {/* 3D ambient background */}
+    <div className="page">
+      {/* always-on ambient 3D — floating polyhedra, rings, starfield */}
       <BackgroundScene />
+      <GlowField />
+      <GrainOverlay />
+      <ScrollProgress />
+      <DebugHUD />
+      <Nav />
 
-      {/* Ambient gradient orbs */}
-      <div className="ambient-orb" style={{
-        position: 'fixed', top: '10%', left: '-15%', width: '600px', height: '600px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255,107,61,0.15) 0%, transparent 70%)',
-        filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
-      }} />
-      <div className="ambient-orb" style={{
-        position: 'fixed', bottom: '5%', right: '-15%', width: '700px', height: '700px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(91,158,255,0.12) 0%, transparent 70%)',
-        filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0,
-      }} />
-
-      {/* Grain */}
-      <div style={{
-        position: 'fixed', inset: 0,
-        backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")",
-        opacity: 0.05, pointerEvents: 'none', zIndex: 1, mixBlendMode: 'overlay',
-      }} />
-
-      <div className="page-container" style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
-
-        {/* NAV */}
-        <Nav />
-
-        {/* HERO */}
-        <section className="hero-grid" style={{
-          display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px',
-          alignItems: 'center', padding: '80px 0 120px', minHeight: '90vh',
-        }}>
-          <div>
-            <Reveal>
-              <div className="hero-eyebrow" style={{
-                fontSize: '18px', letterSpacing: '0.2em', textTransform: 'uppercase',
-                color: '#ff6b3d', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px',
-              }}>
-                <span style={{ width: '32px', height: '1px', background: '#ff6b3d' }} />
-                Available for Opportunities · 2026
-              </div>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <h1 className="hero-h1" style={{
-                fontSize: 'clamp(40px, 7vw, 96px)', lineHeight: 0.95,
-                letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '32px',
-              }}>
-                Hi, I'm<br />
-                <span className="glow" style={{
-                  fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-                }}>Jaskirat Singh</span><br />
-                — I build things.
-              </h1>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <p className="hero-paragraph" style={{
-                fontSize: '18px', color: 'rgba(245,241,234,0.7)',
-                maxWidth: '520px', marginBottom: '40px', lineHeight: 1.6,
-              }}>
-                Final-year B.Tech student in Electrical & Electronics Engineering at BIT Mesra, with hands-on experience as a Software Developer Intern. I work across full-stack web, AI/ML, and power electronics.
-              </p>
-            </Reveal>
-            <Reveal delay={0.3}>
-              <div className="hero-cta-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <Magnetic>
-                  <a href="#projects" className="hero-cta" style={{
-                    padding: '14px 28px', background: '#f5f1ea', color: '#08080a',
-                    borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                  }}>
-                    See my work <ArrowUpRight size={16} />
-                  </a>
-                </Magnetic>
-                <ResumeDropdown />
-              </div>
-            </Reveal>
+      <main id="main" style={{ position: 'relative' }}>
+        {/* HERO — full-bleed type assembling from random positions over the 3D field */}
+        <section
+          className="container"
+          style={{
+            position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            paddingTop: 150, paddingBottom: 50, minHeight: '90vh', overflowX: 'clip',
+          }}
+        >
+          <div className="eyebrow" style={{ marginBottom: 38, alignSelf: 'flex-start' }}>
+            <span className="led" />
+            <ScrambleText text="AVAILABLE FOR OPPORTUNITIES · 2026" />
           </div>
-          <div className="hero-3d" style={{ height: '550px', width: '100%' }}>
-            <HeroScene />
+          <h1 className="head head-xl" style={{ fontSize: 'clamp(48px, 9.5vw, 138px)', marginBottom: 36, maxWidth: 1100 }}>
+            <ScatterText
+              active={heroIn}
+              delay={0.05}
+              stagger={0.05}
+              distance={1.6}
+              segments={[
+                { text: "Hi, I'm" },
+                { br: true },
+                { text: 'Jaskirat Singh', chars: true, underline: true, className: 'ital' },
+                { br: true },
+                { text: '— I build things.' },
+              ]}
+            />
+          </h1>
+          <p style={{ fontSize: 19, color: 'var(--text-dim)', maxWidth: 580, marginBottom: 44, lineHeight: 1.6 }}>
+            <ScatterText
+              active={heroIn}
+              delay={0.85}
+              stagger={0.014}
+              distance={0.55}
+              segments={[
+                { text: 'Final-year B.Tech student in Electrical & Electronics Engineering at BIT Mesra, with hands-on experience as a Software Developer Intern. I work across full-stack web, AI/ML, and power electronics.' },
+              ]}
+            />
+          </p>
+          <div
+            style={{
+              display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center',
+              opacity: heroIn ? 1 : 0,
+              transform: heroIn ? 'none' : 'translateY(26px)',
+              transition: 'opacity 0.6s var(--ease-expo) 1.2s, transform 0.6s var(--ease-expo) 1.2s',
+            }}
+          >
+            <Magnetic>
+              <a
+                href="#projects"
+                data-cursor="press"
+                style={{
+                  padding: '14px 28px', background: 'var(--text)', color: 'var(--bg)',
+                  borderRadius: 999, fontSize: 14, fontWeight: 500,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                See my work <ArrowUpRight size={16} />
+              </a>
+            </Magnetic>
+            <ResumeDropdown />
           </div>
         </section>
 
-        {/* SCROLL CUE */}
-        <div className="scroll-cue" style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: '10px', marginBottom: '24px', color: 'rgba(245,241,234,0.4)',
-        }}>
-          <span style={{ fontSize: '11px', letterSpacing: '0.32em', textTransform: 'uppercase' }}>
+        {/* SCROLL CUE — the trace's origin */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, paddingBottom: 26 }} aria-hidden="true">
+          <span className="mono" style={{ fontSize: 10, letterSpacing: '0.3em', color: 'var(--text-muted)' }}>
             Scroll to explore
           </span>
-          <ChevronDown size={18} className="scroll-cue-chevron" style={{ color: '#ff6b3d' }} />
+          <VerticalTrace height={90} dotTop />
         </div>
 
-        {/* TECH MARQUEE */}
-        <Marquee items={marqueeItems} />
+        {/* SOFTWARE × HARDWARE converge beat */}
+        <ConvergeBand />
 
         {/* ABOUT + STATS */}
-        <section id="about" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="01">About me</SectionEyebrow>
-          </Reveal>
-          <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start', marginBottom: '80px' }}>
-            <Reveal delay={0.1}>
-              <h2 className="section-h2" style={{
-                fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-                letterSpacing: '-0.02em', fontWeight: 500,
-              }}>
-                Engineer at the <span style={{
-                  fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-                }}>intersection</span> of code & hardware.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <div>
-                <p style={{ fontSize: '18px', color: 'rgba(245,241,234,0.85)', marginBottom: '20px', lineHeight: 1.7 }}>
-                  I'm a final-year EEE student at BIT Mesra who genuinely enjoys both sides of the stack — writing clean React/Next.js apps and designing power electronics circuits.
-                </p>
-                <p style={{ fontSize: '16px', color: 'rgba(245,241,234,0.6)', marginBottom: '24px', lineHeight: 1.7 }}>
-                  My internship at Productimate AI Solutions sharpened my full-stack skills, and side projects in AI (LangChain, RAG) and forecasting (SARIMA, Power BI) keep me exploring new domains.
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                  <span style={{
-                    padding: '6px 14px', background: 'rgba(255,107,61,0.1)', color: '#ff6b3d',
-                    border: '1px solid rgba(255,107,61,0.3)', borderRadius: '999px', fontSize: '13px',
-                  }}><MapPin size={12} style={{ display: 'inline', marginRight: '6px' }} />Ranchi, India</span>
-                  <span style={{
-                    padding: '6px 14px', background: 'rgba(91,158,255,0.1)', color: '#5b9eff',
-                    border: '1px solid rgba(91,158,255,0.3)', borderRadius: '999px', fontSize: '13px',
-                  }}>BIT Mesra · 2026</span>
-                  <span style={{
-                    padding: '6px 14px', background: 'rgba(16,185,129,0.1)', color: '#10b981',
-                    border: '1px solid rgba(16,185,129,0.3)', borderRadius: '999px', fontSize: '13px',
-                  }}>Open to work</span>
-                </div>
+        <section id="about" className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>01</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="01 — About me" /></div>
+              </Reveal>
+            </div>
+            <div className="about-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 72, alignItems: 'start', marginBottom: 80 }}>
+              <div style={{ position: 'relative' }}>
+                <IntersectionBeat />
+                <MaskLines
+                  className="head"
+                  lines={[
+                    'Engineer at the',
+                    <><span className="ital">intersection</span> of</>,
+                    'code & hardware.',
+                  ]}
+                />
               </div>
-            </Reveal>
-          </div>
+              <div>
+                <WordRise
+                  text="I'm a final-year EEE student at BIT Mesra who genuinely enjoys both sides of the stack — writing clean React/Next.js apps and designing power electronics circuits."
+                  style={{ fontSize: 18, color: 'var(--text-dim)', marginBottom: 20, lineHeight: 1.7 }}
+                />
+                <WordRise
+                  text="My internship at Productimate AI Solutions sharpened my full-stack skills, and side projects in AI (LangChain, RAG) and forecasting (SARIMA, Power BI) keep me exploring new domains."
+                  style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 26, lineHeight: 1.7 }}
+                />
+                <Reveal className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  <span className="chip" style={{ transitionDelay: '0.05s' }}><MapPin size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: '-1px' }} />Ranchi, India</span>
+                  <span className="chip" style={{ transitionDelay: '0.1s' }}>BIT Mesra · 2026</span>
+                  <span className="chip" style={{ transitionDelay: '0.15s', color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.4)' }}>Open to work</span>
+                </Reveal>
+              </div>
+            </div>
 
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
-            {stats.map((s, i) => (
-              <Reveal key={s.label} delay={i * 0.08}>
-                <TiltCard intensity={8}>
-                  <div className="hover-target stat-card" style={{
-                    padding: '32px', height: '100%',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                    backdropFilter: 'blur(10px)', position: 'relative', overflow: 'hidden',
-                  }}>
-                    <div style={{ color: '#ff6b3d', marginBottom: '20px' }}>{s.icon}</div>
-                    <div className="stat-card-value" style={{
-                      fontSize: '48px', fontWeight: 600, letterSpacing: '-0.02em',
-                      lineHeight: 1, marginBottom: '8px',
-                    }}>
-                      <CountUp end={s.value} suffix={s.suffix} />
+            {/* Stats — slot-machine odometers; the 300 is still counting */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 18 }}>
+              {stats.map((s, i) => (
+                <Reveal key={s.label} delay={i * 0.07} style={{ height: '100%' }}>
+                  <TiltCard intensity={9}>
+                    <div className="card corner-ticks" style={{ padding: 30, height: '100%' }}>
+                      <div style={{ color: 'var(--accent)', marginBottom: 18 }}>{s.icon}</div>
+                      <div style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 10 }}>
+                        <Odometer value={s.value} suffix={s.suffix} gag={!!s.gag} />
+                      </div>
+                      <div className="mono" style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{s.label}</div>
                     </div>
-                    <div style={{ fontSize: '14px', color: 'rgba(245,241,234,0.6)' }}>{s.label}</div>
-                  </div>
-                </TiltCard>
-              </Reveal>
-            ))}
+                  </TiltCard>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* SKILLS */}
-        <section id="skills" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="02">Skills &amp; Tools</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="section-h2" style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-              letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
-            }}>
-              The <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>toolkit</span> I work with.
-            </h2>
-          </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-            {skills.map((s, i) => (
-              <Reveal key={s.cat} delay={i * 0.05}>
-                <TiltCard>
-                  <div className="hover-target skill-card" style={{
-                    padding: '32px', height: '100%',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                    backdropFilter: 'blur(10px)',
-                  }}>
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '12px',
-                      background: `${s.color}20`, color: s.color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginBottom: '20px', border: `1px solid ${s.color}40`,
-                    }}>{s.icon}</div>
-                    <h4 style={{
-                      fontFamily: "'Instrument Serif', serif", fontSize: '24px',
-                      color: '#f5f1ea', marginBottom: '20px',
-                    }}>{s.cat}</h4>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {s.items.map((item) => (
-                        <span key={item} style={{
-                          fontSize: '12px', padding: '5px 12px',
-                          background: 'rgba(245,241,234,0.04)',
-                          border: '1px solid rgba(245,241,234,0.08)',
-                          borderRadius: '999px', color: 'rgba(245,241,234,0.75)',
-                        }}>{item}</span>
+        {/* SKILLS — IC package module library */}
+        <section id="skills" className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>02</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text={'02 — Skills & tools'} /></div>
+              </Reveal>
+              <MaskLines className="head" lines={[<>The <span className="ital">toolkit</span></>, 'I work with.']} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 18 }}>
+              {skills.map((s, i) => (
+                <Reveal key={s.cat} delay={(i % 4) * 0.07} style={{ height: '100%' }}>
+                  <div className="card ic-card">
+                    {PIN_TOPS.map((t) => <span key={`l${t}`} className="ic-pin l" style={{ left: -8, top: t }} />)}
+                    {PIN_TOPS.map((t) => <span key={`r${t}`} className="ic-pin r" style={{ right: -8, top: t }} />)}
+                    <span className="ref">U{i + 1}</span>
+                    <div className="ic-icon">{s.icon}</div>
+                    <h3 className="serif" style={{ fontSize: 25, marginBottom: 20 }}>{s.cat}</h3>
+                    <div className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {s.items.map((item, ci) => (
+                        <span key={item} className="chip" style={{ transitionDelay: `${0.15 + ci * 0.03}s` }}>{item}</span>
                       ))}
                     </div>
                   </div>
-                </TiltCard>
-              </Reveal>
-            ))}
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* EXPERIENCE */}
-        <section id="experience" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="03">Experience</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="section-h2" style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-              letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
-            }}>
-              Where I've <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>worked</span> & led.
-            </h2>
-          </Reveal>
-          <div style={{ display: 'grid', gap: '20px' }}>
-            {experience.map((e, i) => (
-              <Reveal key={e.company} delay={i * 0.1}>
-                <TiltCard intensity={6}>
-                  <div className="hover-target exp-card" style={{
-                    padding: '40px',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                    backdropFilter: 'blur(10px)',
-                  }}>
-                    <div className="exp-card-header" style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      flexWrap: 'wrap', gap: '12px', marginBottom: '20px',
-                    }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-                          <Briefcase size={18} style={{ color: '#ff6b3d' }} />
-                          <h3 style={{ fontSize: '24px', fontWeight: 500, letterSpacing: '-0.01em' }}>{e.role}</h3>
+        {/* EXPERIENCE — the timeline spine */}
+        <section id="experience" className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>03</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="03 — Experience" /></div>
+              </Reveal>
+              <MaskLines className="head" lines={[<>Where I&apos;ve <span className="ital">worked</span></>, '& led.']} />
+            </div>
+            <div ref={expRef} style={{ position: 'relative', paddingLeft: 46 }}>
+              {/* the spine — draws with scroll */}
+              <svg
+                aria-hidden="true"
+                style={{ position: 'absolute', left: 10, top: 0, width: 2, height: '100%', overflow: 'visible' }}
+                viewBox="0 0 2 100"
+                preserveAspectRatio="none"
+              >
+                <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
+                <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - expP} />
+              </svg>
+              <div style={{ display: 'grid', gap: 22 }}>
+                {experience.map((e, i) => (
+                  <div key={e.company} style={{ position: 'relative' }}>
+                    {/* via on the spine — lights when the card docks */}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute', left: -41, top: 38, width: 12, height: 12, borderRadius: '50%',
+                        border: '1.5px solid', zIndex: 2,
+                        borderColor: expDocked[i] ? 'var(--accent)' : 'var(--border-hi)',
+                        background: expDocked[i] ? 'var(--accent-soft)' : 'var(--bg)',
+                        boxShadow: expDocked[i] ? '0 0 12px rgba(255,107,61,0.7)' : 'none',
+                        transition: 'border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease',
+                      }}
+                    />
+                    <Spark fire={expDocked[i]} style={{ left: -35, top: 44 }} />
+                    <SlideDock side="right" onDocked={() => dockExp(i)}>
+                      <div className="card" style={{ padding: '36px 34px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+                              <Briefcase size={17} style={{ color: 'var(--accent)' }} />
+                              <h3 style={{ fontSize: 22, fontWeight: 500, letterSpacing: '-0.01em' }}>{e.role}</h3>
+                            </div>
+                            <p style={{ fontSize: 15, color: 'var(--accent)' }}>{e.company} · {e.location}</p>
+                          </div>
+                          <Stamp active={expDocked[i]} delay={0.15} style={{ '--rot': '-3deg', alignSelf: 'flex-start' }}>{e.date}</Stamp>
                         </div>
-                        <p style={{ fontSize: '16px', color: '#ff6b3d' }}>{e.company} · {e.location}</p>
+                        <ul style={{ listStyle: 'none', marginBottom: 20 }}>
+                          {e.points.map((p, idx) => (
+                            <li
+                              key={idx}
+                              className="exp-li"
+                              style={{
+                                fontSize: 15, color: 'var(--text-dim)', paddingLeft: 26,
+                                position: 'relative', marginBottom: 10, lineHeight: 1.65,
+                                transitionDelay: `${0.1 + idx * 0.06}s`,
+                              }}
+                            >
+                              <span className="exp-dash" style={{
+                                position: 'absolute', left: 0, top: 11, width: 14, height: 1.5,
+                                background: 'var(--accent)', transitionDelay: `${0.15 + idx * 0.06}s`,
+                              }} />
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                          {e.stack.map((t, ci) => (
+                            <span key={t} className="chip" style={{ color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.3)', transitionDelay: `${0.2 + ci * 0.03}s` }}>{t}</span>
+                          ))}
+                        </div>
                       </div>
-                      <span style={{
-                        fontSize: '13px', color: 'rgba(245,241,234,0.5)', alignSelf: 'flex-start',
-                        padding: '4px 12px', background: 'rgba(245,241,234,0.05)',
-                        border: '1px solid rgba(245,241,234,0.08)', borderRadius: '999px',
-                      }}>{e.date}</span>
-                    </div>
-                    <ul style={{ listStyle: 'none', marginBottom: '20px' }}>
-                      {e.points.map((p, idx) => (
-                        <li key={idx} style={{
-                          fontSize: '15px', color: 'rgba(245,241,234,0.7)',
-                          paddingLeft: '20px', position: 'relative', marginBottom: '10px', lineHeight: 1.6,
-                        }}>
-                          <span style={{
-                            position: 'absolute', left: 0, top: '10px',
-                            width: '8px', height: '1px', background: '#ff6b3d',
-                          }} />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {e.stack.map((t) => (
-                        <span key={t} style={{
-                          fontSize: '12px', padding: '4px 12px',
-                          background: 'rgba(255,107,61,0.08)',
-                          border: '1px solid rgba(255,107,61,0.2)',
-                          borderRadius: '999px', color: '#ff6b3d',
-                        }}>{t}</span>
-                      ))}
-                    </div>
+                    </SlideDock>
                   </div>
-                </TiltCard>
-              </Reveal>
-            ))}
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* PROJECTS */}
-        <section id="projects" className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="04">Selected work</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="section-h2" style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-              letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
-            }}>
-              Things I've <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>built</span>.
-            </h2>
-          </Reveal>
-          <div style={{ display: 'grid', gap: '20px' }}>
-            {projects.map((p, i) => (
-              <Reveal key={p.num} delay={i * 0.08}>
-                <TiltCard intensity={6}>
-                  <Link href={`/projects/${p.slug}`} className="hover-target project-row" style={{
-                    display: 'grid', gridTemplateColumns: '80px 1fr auto',
-                    gap: '32px', alignItems: 'center', padding: '40px',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                  }}>
-                    <div className="project-num" style={{
-                      fontFamily: "'Instrument Serif', serif", fontSize: '56px',
-                      color: '#ff6b3d', lineHeight: 1,
-                    }}>{p.num}</div>
-                    <div>
-                      <div style={{
-                        display: 'flex', justifyContent: 'space-between',
-                        alignItems: 'baseline', marginBottom: '8px', flexWrap: 'wrap', gap: '8px',
-                      }}>
-                        <h3 style={{ fontSize: '26px', fontWeight: 500, letterSpacing: '-0.01em' }}>
-                          {p.title}
-                        </h3>
-                        <span style={{ fontSize: '13px', color: 'rgba(245,241,234,0.4)' }}>{p.date}</span>
-                      </div>
-                      <p style={{
-                        color: 'rgba(245,241,234,0.65)', fontSize: '15px',
-                        marginBottom: '16px', lineHeight: 1.6,
-                      }}>{p.desc}</p>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {p.tags.map((t) => (
-                          <span key={t} style={{
-                            fontSize: '12px', padding: '4px 12px',
-                            background: 'rgba(245,241,234,0.06)',
-                            border: '1px solid rgba(245,241,234,0.1)',
-                            borderRadius: '999px', color: 'rgba(245,241,234,0.7)',
-                          }}>{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <ArrowUpRight size={28} className="project-row-arrow" style={{ color: '#ff6b3d' }} />
-                  </Link>
-                </TiltCard>
+        {/* FROM IDEA / TO SHIPPED diverge beat */}
+        <DivergeBand />
+
+        {/* THE PROJECT RAIL */}
+        <section id="projects" className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>04</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="Selected work — 6 files" /></div>
               </Reveal>
-            ))}
+              <MaskLines className="head" lines={[<>Things I&apos;ve <span className="ital">built</span>.</>]} />
+            </div>
+
+            {/* mono HUD ticks FILE 0X/06 */}
+            {!reduced && (
+              <div className="rail-hud" aria-hidden="true">
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 10, letterSpacing: '0.16em', color: 'var(--text-dim)',
+                    background: 'rgba(16,16,19,0.85)', backdropFilter: 'blur(8px)',
+                    border: '1px solid var(--border)', borderRadius: 6, padding: '7px 12px',
+                  }}
+                >
+                  <span key={hudFile} className="hud-pop">
+                    FILE {String(hudFile).padStart(2, '0')}/{String(projects.length).padStart(2, '0')} — {projects[hudFile - 1].title.split(' — ')[0]}
+                  </span>
+                  {' '}· {String(Math.round(railP * 100)).padStart(3, '0')}%
+                </span>
+              </div>
+            )}
+
+            <div ref={railRef} className="rail-track" style={{ position: 'relative', padding: '30px 0' }}>
+              {/* the rail — draws with scroll, pulse rides it */}
+              <svg className="rail-spine" aria-hidden="true" viewBox="0 0 2 100" preserveAspectRatio="none">
+                <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
+                <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - railP} />
+              </svg>
+              {!reduced && <span className="rail-pulse" style={{ top: `${railP * 100}%` }} aria-hidden="true" />}
+
+              {projects.map((p, i) => {
+                const fromLeft = i % 2 === 0;
+                const lit = reduced || railP >= RAIL_THRESHOLDS[i];
+                const desc = p.slug === 'warehouse-optimizer' ? `${p.desc.split('. ')[0]}.` : p.desc;
+                return (
+                  <div
+                    key={p.slug}
+                    className="dossier-row"
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', margin: '46px 0' }}
+                  >
+                    <div className="rail-col" aria-hidden="true">
+                      <span className={`rail-stub ${fromLeft ? 'left' : 'right'} ${lit ? 'lit' : ''}`} />
+                      <span className={`rail-via ${lit ? 'lit' : ''}`} />
+                      <Spark fire={railDocked[i]} style={{ left: '50%', top: '50%' }} />
+                    </div>
+                    <SlideDock
+                      side={fromLeft ? 'left' : 'right'}
+                      onDocked={() => dockRail(i)}
+                      className={fromLeft ? 'dossier-card-l' : 'dossier-card-r'}
+                      style={{ width: '100%', maxWidth: 520 }}
+                    >
+                      <Link
+                        href={`/projects/${p.slug}`}
+                        data-cursor="open"
+                        className="paper"
+                        style={{
+                          display: 'block', position: 'relative', padding: '26px 28px 24px',
+                          opacity: lit ? 1 : 0.62, transition: 'opacity 0.4s ease',
+                        }}
+                      >
+                        <Stamp active={railDocked[i]} delay={0.2} style={{ position: 'absolute', top: 16, right: 16 }}>
+                          {STAMPS[i]}
+                        </Stamp>
+                        <div className="serif" style={{ fontSize: 46, lineHeight: 1, color: 'var(--accent-dim)', marginBottom: 12 }}>{p.num}</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                          <h3 style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--paper-ink)' }}>{p.title}</h3>
+                          <span className="mono" style={{ fontSize: 9.5, color: 'rgba(31,30,29,0.55)' }}>{p.date}</span>
+                        </div>
+                        <p style={{ fontSize: 14, color: 'rgba(31,30,29,0.75)', lineHeight: 1.6, marginBottom: 16 }}>{desc}</p>
+                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {p.tags.map((t) => <span key={t} className="mchip">{t}</span>)}
+                          <ArrowUpRight size={18} style={{ color: 'var(--accent-dim)', marginLeft: 'auto' }} />
+                        </div>
+                      </Link>
+                    </SlideDock>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
+
+        {/* VELOCITY MARQUEE */}
+        <VelocityMarquee />
 
         {/* ACHIEVEMENTS */}
-        <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="05">Achievements</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="section-h2" style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-              letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
-            }}>
-              Wins & <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>recognition</span>.
-            </h2>
-          </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-            {achievements.map((a, i) => (
-              <Reveal key={a.title} delay={i * 0.06}>
-                <TiltCard intensity={8}>
-                  <div className="hover-target achievement-card" style={{
-                    padding: '28px', height: '100%',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex', gap: '20px', alignItems: 'flex-start',
-                  }}>
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '12px',
-                      background: 'rgba(255,107,61,0.1)', color: '#ff6b3d',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '1px solid rgba(255,107,61,0.3)', flexShrink: 0,
-                    }}>{a.icon}</div>
-                    <div>
-                      <h4 style={{
-                        fontSize: '17px', fontWeight: 500,
-                        marginBottom: '6px', letterSpacing: '-0.01em',
-                      }}>{a.title}</h4>
-                      <p style={{ fontSize: '14px', color: 'rgba(245,241,234,0.55)' }}>{a.org}</p>
-                    </div>
-                  </div>
-                </TiltCard>
+        <section className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>05</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="05 — Achievements" /></div>
               </Reveal>
-            ))}
+              <MaskLines className="head" lines={[<>Wins &amp; <span className="ital">recognition</span>.</>]} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+              {achievements.map((a, i) => (
+                <SlideDock key={a.title} side={i % 2 === 0 ? 'left' : 'right'} delay={(i % 2) * 0.06} style={{ height: '100%' }}>
+                  <TiltCard intensity={8}>
+                    <div className="card" style={{ padding: 26, height: '100%', display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+                      <div className="stamp-icon" style={{
+                        width: 46, height: 46, borderRadius: 11, flexShrink: 0,
+                        background: 'var(--accent-soft)', color: 'var(--accent)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: '1px solid rgba(255,107,61,0.3)',
+                      }}>{a.icon}</div>
+                      <div>
+                        <h3 style={{ fontSize: 16.5, fontWeight: 500, marginBottom: 6, letterSpacing: '-0.01em' }}>{a.title}</h3>
+                        <p style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{a.org}</p>
+                      </div>
+                    </div>
+                  </TiltCard>
+                </SlideDock>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* EDUCATION */}
-        <section className="section" style={{ padding: '120px 0', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="06">Education</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="section-h2" style={{
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05,
-              letterSpacing: '-0.02em', fontWeight: 500, marginBottom: '60px',
-            }}>
-              My <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>academic</span> journey.
-            </h2>
-          </Reveal>
-          <div style={{ display: 'grid', gap: '20px' }}>
-            {education.map((ed, i) => (
-              <Reveal key={ed.school} delay={i * 0.1}>
-                <TiltCard intensity={5}>
-                  <div className="hover-target edu-row" style={{
-                    padding: '32px',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                    backdropFilter: 'blur(10px)',
-                    display: 'grid', gridTemplateColumns: 'auto 1fr auto',
-                    gap: '24px', alignItems: 'center',
-                  }}>
+        {/* EDUCATION — rest beat */}
+        <section className="section">
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>06</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="06 — Education" /></div>
+              </Reveal>
+              <MaskLines className="head" lines={[<>My <span className="ital">academic</span> journey.</>]} />
+            </div>
+            <div style={{ display: 'grid', gap: 18 }}>
+              {education.map((ed, i) => (
+                <Reveal key={ed.school} delay={i * 0.08}>
+                  <div className="card" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 24, alignItems: 'center' }}>
                     <div style={{
-                      width: '52px', height: '52px', borderRadius: '14px',
-                      background: 'rgba(255,107,61,0.1)', color: '#ff6b3d',
+                      width: 50, height: 50, borderRadius: 13,
+                      background: 'var(--accent-soft)', color: 'var(--accent)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       border: '1px solid rgba(255,107,61,0.3)',
-                    }}><GraduationCap size={24} /></div>
+                    }}><GraduationCap size={22} /></div>
                     <div>
-                      <h3 style={{
-                        fontSize: '20px', fontWeight: 500,
-                        marginBottom: '6px', letterSpacing: '-0.01em',
-                      }}>{ed.degree}</h3>
-                      <p style={{ fontSize: '15px', color: '#ff6b3d', marginBottom: '4px' }}>
-                        {ed.school}
-                      </p>
-                      <p style={{ fontSize: '13px', color: 'rgba(245,241,234,0.5)' }}>
-                        {ed.date} · {ed.location}
-                      </p>
+                      <h3 style={{ fontSize: 19, fontWeight: 500, marginBottom: 5, letterSpacing: '-0.01em' }}>{ed.degree}</h3>
+                      <p style={{ fontSize: 14.5, color: 'var(--accent)', marginBottom: 3 }}>{ed.school}</p>
+                      <p className="mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ed.date} · {ed.location}</p>
                     </div>
-                    <span className="edu-grade" style={{
-                      fontFamily: "'Instrument Serif', serif", fontSize: '24px',
-                      color: '#f5f1ea', whiteSpace: 'nowrap',
-                    }}>{ed.grade}</span>
+                    <span className="serif" style={{ fontSize: 23, whiteSpace: 'nowrap' }}>{ed.grade}</span>
                   </div>
-                </TiltCard>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CURRENTLY SHIPPING */}
+        <section className="section" style={{ padding: '90px 0' }}>
+          <div className="container">
+            <div className="section-head" style={{ marginBottom: 34 }}>
+              <GhostNum style={{ fontSize: 'clamp(90px, 10vw, 170px)' }}>07</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="Currently shipping" /></div>
               </Reveal>
-            ))}
+            </div>
+            <SlideDock side="left">
+              <a
+                href="https://github.com/Jaskirat314276/AI_EMAIL_SENDER-HIREFLOW-AI-"
+                target="_blank"
+                rel="noreferrer"
+                data-cursor="open"
+                className="card corner-ticks"
+                style={{ display: 'block', padding: '34px 36px', position: 'relative' }}
+              >
+                <span className="mono" style={{
+                  position: 'absolute', top: 20, right: 22, overflow: 'hidden',
+                  fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--accent)',
+                  border: '1px solid rgba(255,107,61,0.4)', borderRadius: 5, padding: '5px 10px',
+                }}>
+                  In development
+                  <span aria-hidden="true" style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(100deg, transparent, rgba(255,107,61,0.22), transparent)',
+                    animation: 'scan-sheen 2.8s linear infinite',
+                  }} />
+                </span>
+                <h3 className="serif" style={{ fontSize: 'clamp(24px, 3.2vw, 36px)', marginBottom: 12, paddingRight: 130 }}>
+                  Now building: <span className="ital">HireFlow AI</span> — a job-outreach copilot.
+                </h3>
+                <p style={{ fontSize: 15.5, color: 'var(--text-dim)', maxWidth: 640, lineHeight: 1.65, marginBottom: 16 }}>
+                  Turns a spreadsheet of recruiters into personalized, paced, tracked cold email — extraction to inbox to interview.
+                </p>
+                <span className="mono" style={{ fontSize: 10.5, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Github size={13} /> View the repo <ArrowUpRight size={12} />
+                </span>
+              </a>
+            </SlideDock>
           </div>
         </section>
 
         {/* CONTACT */}
-        <section id="contact" className="contact-section" style={{ padding: '140px 0 80px', borderTop: '1px solid rgba(245,241,234,0.08)' }}>
-          <Reveal>
-            <SectionEyebrow index="07">Get in touch</SectionEyebrow>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="glow" style={{
-              fontSize: 'clamp(40px, 8vw, 110px)', lineHeight: 0.95,
-              letterSpacing: '-0.03em', fontWeight: 500, marginBottom: '40px',
-            }}>
-              Let's build<br />
-              something <span style={{
-                fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-              }}>together</span>.
-            </h2>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <Magnetic strength={0.2}>
-              <a href="mailto:jaskiratsingh314276@gmail.com" className="contact-email" style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontSize: 'clamp(20px, 3.5vw, 40px)', color: '#f5f1ea',
-                borderBottom: '1px solid rgba(245,241,234,0.2)', paddingBottom: '8px',
-                display: 'inline-block', marginBottom: '48px',
-                wordBreak: 'break-word',
-              }}>jaskiratsingh314276@gmail.com →</a>
-            </Magnetic>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <div className="contact-socials" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
-              {[
-                { icon: <Github size={16} />, label: 'GitHub', href: 'https://github.com/' },
-                { icon: <Linkedin size={16} />, label: 'LinkedIn', href: 'https://linkedin.com/' },
-                { icon: <Code2 size={16} />, label: 'LeetCode · Jaskirat-singh', href: 'https://leetcode.com/Jaskirat-singh' },
-                { icon: <Code2 size={16} />, label: 'GeeksforGeeks · jaskiratsi2k1r', href: '#' },
-                { icon: <Phone size={16} />, label: '+91 8340361891', href: 'tel:+918340361891' },
-              ].map((s) => (
-                <Magnetic key={s.label}>
-                  <a href={s.href} className="hover-target" style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '12px 20px', border: '1px solid rgba(245,241,234,0.15)',
-                    borderRadius: '999px', fontSize: '14px',
-                    color: 'rgba(245,241,234,0.8)', transition: 'all 0.2s',
-                  }}>{s.icon} {s.label}</a>
-                </Magnetic>
+        <section id="contact" className="section" style={{ padding: '140px 0 90px' }}>
+          <div className="container">
+            <div className="section-head">
+              <GhostNum>08</GhostNum>
+              <Reveal>
+                <div className="eyebrow"><span className="led" /><ScrambleText text="08 — Get in touch" /></div>
+              </Reveal>
+              <MaskLines className="head head-xl" lines={["Let's build", <>something <span className="ital">together</span>.</>]} />
+            </div>
+            <Reveal delay={0.15}>
+              <Magnetic strength={0.2}>
+                <a
+                  href="mailto:jaskiratsingh314276@gmail.com"
+                  data-cursor="press"
+                  className="serif"
+                  style={{
+                    fontSize: 'clamp(20px, 3.5vw, 42px)', color: 'var(--text)',
+                    borderBottom: '1px solid var(--border-hi)', paddingBottom: 8,
+                    display: 'inline-block', marginBottom: 22, wordBreak: 'break-word',
+                  }}
+                >
+                  jaskiratsingh314276@gmail.com →
+                </a>
+              </Magnetic>
+            </Reveal>
+            <Reveal delay={0.25}>
+              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.24em', color: 'var(--text-muted)', marginBottom: 44 }}>
+                Email · LinkedIn · GitHub · LeetCode — pick a wire.
+              </div>
+            </Reveal>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {socials.map((s, i) => (
+                <SlideDock key={s.label} side={i % 2 === 0 ? 'left' : 'right'} delay={i * 0.05}>
+                  <Magnetic>
+                    <a
+                      href={s.href}
+                      target={s.href.startsWith('http') ? '_blank' : undefined}
+                      rel={s.href.startsWith('http') ? 'noreferrer' : undefined}
+                      data-cursor="press"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '12px 20px', border: '1px solid var(--border-hi)',
+                        borderRadius: 999, fontSize: 13.5, color: 'var(--text-dim)',
+                      }}
+                    >{s.icon} {s.label}</a>
+                  </Magnetic>
+                </SlideDock>
               ))}
             </div>
-          </Reveal>
+          </div>
         </section>
+      </main>
 
-        {/* FOOTER */}
-        <footer className="footer" style={{
-          padding: '32px 0', borderTop: '1px solid rgba(245,241,234,0.08)',
-          display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-          color: 'rgba(245,241,234,0.4)', fontSize: '13px',
-        }}>
+      {/* FOOTER — the trace terminates in the LED */}
+      <footer style={{ borderTop: '1px solid var(--border)', position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '36px 0 0' }} aria-hidden="true">
+          <VerticalTrace height={64} />
+          <FooterLed />
+        </div>
+        <div
+          className="footer-row container"
+          style={{
+            display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+            paddingTop: 26, paddingBottom: 34, color: 'var(--text-muted)', fontSize: 13,
+          }}
+        >
           <div>© 2026 Jaskirat Singh</div>
           <div>Crafted with passion · Ranchi, India</div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

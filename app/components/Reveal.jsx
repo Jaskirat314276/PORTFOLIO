@@ -2,19 +2,33 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-export default function Reveal({ children, delay = 0 }) {
+// v2: whileInView fade + rise (transform/opacity only), once, staggered
+// children optional. Keeps the original API (children, delay).
+export default function Reveal({ children, delay = 0, className = '', as: Tag = 'div', style }) {
   const ref = useRef(null);
-  const [v, setV] = useState(false);
+  const [shown, setShown] = useState(false);
+
   useEffect(() => {
-    const ob = new IntersectionObserver(([e]) => e.isIntersecting && setV(true), { threshold: 0.1 });
-    if (ref.current) ob.observe(ref.current);
+    const el = ref.current;
+    if (!el) return;
+    const ob = new IntersectionObserver(
+      ([e]) => {
+        // fire in view, or rescue if already scrolled past
+        if (e.isIntersecting || e.boundingClientRect.bottom < 0) { setShown(true); ob.disconnect(); }
+      },
+      { threshold: [0, 0.12], rootMargin: '-8% 0px' }
+    );
+    ob.observe(el);
     return () => ob.disconnect();
   }, []);
+
   return (
-    <div ref={ref} style={{
-      opacity: v ? 1 : 0,
-      transform: v ? 'translateY(0)' : 'translateY(40px)',
-      transition: `opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
-    }}>{children}</div>
+    <Tag
+      ref={ref}
+      className={`reveal ${shown ? 'in' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}s`, ...style }}
+    >
+      {children}
+    </Tag>
   );
 }

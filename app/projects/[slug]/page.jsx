@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Github } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Github, Check } from 'lucide-react';
 import { projects, getProject } from '../data';
 import Nav from '../../components/Nav';
-import CustomCursor from '../../components/CustomCursor';
-import BackgroundScene from '../../components/BackgroundScene';
 import Magnetic from '../../components/Magnetic';
 import Reveal from '../../components/Reveal';
-import TiltCard from '../../components/TiltCard';
+
+const STAMP_FOR = {
+  '01': 'FLAGSHIP · 2026', '02': 'SHIPPED', '03': 'LIVE DEMO',
+  '04': 'LIVE DEMO', '05': 'HARDWARE · 300V TESTED', '06': 'SIMULATION',
+};
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -18,7 +20,7 @@ export async function generateMetadata({ params }) {
   const project = getProject(slug);
   if (!project) return { title: 'Project not found' };
   return {
-    title: `${project.title} — JASKIRAT PORTFOLIO`,
+    title: `${project.title} — Jaskirat Singh`,
     description: project.desc,
   };
 }
@@ -28,199 +30,119 @@ export default async function ProjectPage({ params }) {
   const project = getProject(slug);
   if (!project) notFound();
 
+  const ink = 'var(--paper-ink)';
+  const dim = 'rgba(31,30,29,0.62)';
+  const line = 'var(--paper-line)';
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#08080a',
-      color: '#f5f1ea',
-      fontFamily: "'Bricolage Grotesque', system-ui, sans-serif",
-      overflow: 'hidden',
-      position: 'relative',
-      cursor: 'none',
+    <div className="paper-page" style={{
+      minHeight: '100vh', background: 'var(--paper)', color: ink,
+      fontFamily: 'var(--sans)', position: 'relative',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        @media (hover: hover) and (pointer: fine) {
-          body { cursor: none; }
-          a, button { cursor: none; }
+        .paper-page { animation: paperIn 0.32s ease both; }
+        @keyframes paperIn { from { background: #08080a; } to { background: var(--paper); } }
+        .tick-draw { stroke-dasharray: 22; stroke-dashoffset: 22; animation: tickDraw 0.4s ease forwards; }
+        @keyframes tickDraw { to { stroke-dashoffset: 0; } }
+        .paper-btn { transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease; }
+        .paper-btn:hover { transform: translateY(-2px); }
+        @media (prefers-reduced-motion: reduce) {
+          .paper-page { animation: none; }
+          .tick-draw { animation: none; stroke-dashoffset: 0; }
         }
-        a { color: inherit; text-decoration: none; }
-        .glow { text-shadow: 0 0 60px rgba(255, 107, 61, 0.4); }
       `}</style>
 
-      <CustomCursor />
+      <Nav linkPrefix="/" paper />
 
-      {/* 3D ambient background */}
-      <BackgroundScene />
+      <main className="container" style={{ maxWidth: 900, paddingTop: 108, paddingBottom: 120 }}>
+        <Reveal>
+          <Link href="/#projects" data-cursor="view" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, color: dim, fontSize: 14,
+            fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 44,
+          }}>
+            <ArrowLeft size={15} /> Back to the rail
+          </Link>
+        </Reveal>
 
-      {/* Ambient gradient orbs */}
-      <div className="ambient-orb" style={{
-        position: 'fixed', top: '10%', left: '-15%', width: '600px', height: '600px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255,107,61,0.15) 0%, transparent 70%)',
-        filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
-      }} />
-      <div className="ambient-orb" style={{
-        position: 'fixed', bottom: '5%', right: '-15%', width: '700px', height: '700px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(91,158,255,0.12) 0%, transparent 70%)',
-        filter: 'blur(100px)', pointerEvents: 'none', zIndex: 0,
-      }} />
-
-      {/* Grain */}
-      <div style={{
-        position: 'fixed', inset: 0,
-        backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")",
-        opacity: 0.05, pointerEvents: 'none', zIndex: 1, mixBlendMode: 'overlay',
-      }} />
-
-      <div className="page-container" style={{ position: 'relative', zIndex: 2, maxWidth: '1280px', margin: '0 auto', padding: '0 32px' }}>
-        <Nav linkPrefix="/" />
-
-        <main className="project-detail-main" style={{ padding: '60px 0 140px', maxWidth: '900px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
           <Reveal>
-            <Link
-              href="/#projects"
-              className="hover-target project-detail-back"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                color: 'rgba(245,241,234,0.7)', fontSize: '14px',
-                marginBottom: '48px',
-              }}
-            >
-              <ArrowLeft size={16} /> Back to projects
-            </Link>
+            <div className="serif" style={{ fontSize: 'clamp(72px, 12vw, 132px)', color: 'var(--accent-dim)', lineHeight: 0.9 }}>
+              {project.num}
+            </div>
           </Reveal>
+          <span className="stamp" style={{ marginTop: 24 }}>{STAMP_FOR[project.num]}</span>
+        </div>
 
-          <Reveal delay={0.05}>
-            <div className="project-detail-num" style={{
-              fontFamily: "'Instrument Serif', serif", fontSize: '96px',
-              color: '#ff6b3d', lineHeight: 1, marginBottom: '12px',
-            }}>{project.num}</div>
-          </Reveal>
+        <Reveal delay={0.05}>
+          <div className="mono" style={{ fontSize: 11, color: dim, marginTop: 10, marginBottom: 18 }}>{project.date}</div>
+        </Reveal>
 
-          <Reveal delay={0.1}>
-            <div style={{
-              fontSize: '13px', color: 'rgba(245,241,234,0.5)',
-              letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '20px',
-            }}>{project.date}</div>
-          </Reveal>
+        <Reveal delay={0.1}>
+          <h1 className="serif" style={{ fontSize: 'clamp(30px, 5.5vw, 60px)', fontWeight: 400, lineHeight: 1.06, letterSpacing: '-0.01em', marginBottom: 34, color: ink }}>
+            {project.title}
+          </h1>
+        </Reveal>
 
+        {project.links && (project.links.github || project.links.demo) && (
           <Reveal delay={0.15}>
-            <h1 className="glow" style={{
-              fontSize: 'clamp(32px, 6vw, 72px)', fontWeight: 500,
-              letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '40px',
-            }}>
-              {project.title.includes('—') ? (
-                <>
-                  {project.title.split('—')[0]}
-                  <span style={{
-                    fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', color: '#ff6b3d',
-                  }}>— {project.title.split('—').slice(1).join('—').trim()}</span>
-                </>
-              ) : (
-                project.title
-              )}
-            </h1>
-          </Reveal>
-
-          {project.links?.github !== undefined && (
-            <Reveal delay={0.2}>
-              <div style={{
-                display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '40px',
-              }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
+              {project.links.github && (
                 <Magnetic>
-                  <a
-                    href={project.links.github || '#'}
-                    target={project.links.github ? '_blank' : undefined}
-                    rel={project.links.github ? 'noopener noreferrer' : undefined}
-                    className="hover-target"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '8px',
-                      padding: '12px 24px', border: '1px solid rgba(245,241,234,0.2)',
-                      borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-                    }}
-                  >
+                  <a href={project.links.github} target="_blank" rel="noreferrer" data-cursor="press" className="paper-btn" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px',
+                    border: `1px solid ${ink}`, borderRadius: 999, fontSize: 14, color: ink,
+                  }}>
                     <Github size={14} /> GitHub
                   </a>
                 </Magnetic>
+              )}
+              {project.links.demo && (
                 <Magnetic>
-                  <a
-                    href={project.links.demo || '#'}
-                    target={project.links.demo ? '_blank' : undefined}
-                    rel={project.links.demo ? 'noopener noreferrer' : undefined}
-                    className="hover-target"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '8px',
-                      padding: '12px 24px', background: '#ff6b3d', color: '#08080a',
-                      borderRadius: '999px', fontSize: '14px', fontWeight: 500,
-                    }}
-                  >
-                    <ExternalLink size={14} /> Live
+                  <a href={project.links.demo} target="_blank" rel="noreferrer" data-cursor="press" className="paper-btn" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px',
+                    background: 'var(--accent)', color: 'var(--paper)', borderRadius: 999, fontSize: 14, fontWeight: 500,
+                  }}>
+                    <ExternalLink size={14} /> Live Demo
                   </a>
                 </Magnetic>
-              </div>
-            </Reveal>
-          )}
-
-          <Reveal delay={0.25}>
-            <p style={{
-              fontSize: '18px', lineHeight: 1.7,
-              color: 'rgba(245,241,234,0.75)', marginBottom: '40px',
-            }}>{project.desc}</p>
-          </Reveal>
-
-          <Reveal delay={0.3}>
-            <div style={{
-              display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '60px',
-            }}>
-              {project.tags.map((t) => (
-                <span key={t} style={{
-                  fontSize: '13px', padding: '6px 14px',
-                  background: 'rgba(245,241,234,0.06)',
-                  border: '1px solid rgba(245,241,234,0.1)',
-                  borderRadius: '999px', color: 'rgba(245,241,234,0.75)',
-                }}>{t}</span>
-              ))}
+              )}
             </div>
           </Reveal>
+        )}
 
-          {project.highlights?.length > 0 && (
-            <Reveal delay={0.35}>
-              <section style={{ marginBottom: '60px' }}>
-                <div style={{
-                  fontSize: '14px', letterSpacing: '0.2em', textTransform: 'uppercase',
-                  color: '#ff6b3d', marginBottom: '24px',
-                }}>— Highlights</div>
-                <TiltCard intensity={6}>
-                  <div className="hover-target" style={{
-                    padding: '40px',
-                    background: 'linear-gradient(135deg, rgba(245,241,234,0.04) 0%, rgba(245,241,234,0.01) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(245,241,234,0.08)', borderRadius: '20px',
-                  }}>
-                    <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '16px' }}>
-                      {project.highlights.map((h, i) => (
-                        <li key={i} style={{
-                          display: 'flex', gap: '14px',
-                      fontSize: '16px', lineHeight: 1.6,
-                      color: 'rgba(245,241,234,0.8)',
-                    }}>
-                          <span style={{ color: '#ff6b3d', flexShrink: 0, fontWeight: 600 }}>›</span>
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </TiltCard>
-              </section>
-            </Reveal>
-          )}
+        <Reveal delay={0.2}>
+          <p style={{ fontSize: 17.5, lineHeight: 1.75, color: 'rgba(31,30,29,0.82)', marginBottom: 40, maxWidth: 720 }}>
+            {project.desc}
+          </p>
+        </Reveal>
 
-        </main>
-      </div>
+        <Reveal delay={0.25}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 56 }}>
+            {project.tags.map((t) => (
+              <span key={t} className="mono" style={{
+                fontSize: 10, letterSpacing: '0.08em', padding: '6px 12px', borderRadius: 6,
+                background: line, color: 'rgba(31,30,29,0.68)',
+              }}>{t}</span>
+            ))}
+          </div>
+        </Reveal>
+
+        {project.highlights?.length > 0 && (
+          <Reveal delay={0.3}>
+            <div className="mono" style={{ fontSize: 11, color: 'var(--accent-dim)', marginBottom: 22 }}>— HIGHLIGHTS</div>
+            <ul style={{ listStyle: 'none', display: 'grid', gap: 16, borderTop: `1px solid ${line}`, paddingTop: 26 }}>
+              {project.highlights.map((h, i) => (
+                <li key={i} style={{ display: 'flex', gap: 14, fontSize: 16, lineHeight: 1.6, color: 'rgba(31,30,29,0.85)' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
+                    <path className="tick-draw" d="M5 12.5l4.5 4.5L19 7" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: `${0.35 + i * 0.12}s` }} />
+                  </svg>
+                  <span>{h}</span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        )}
+      </main>
     </div>
   );
 }
