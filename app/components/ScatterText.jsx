@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useReducedMotion } from '../lib/useReducedMotion';
 
 // Deterministic pseudo-random from index — SSR-safe (no Math.random in
@@ -12,14 +13,31 @@ const rnd = (i, salt) => {
 // Words (or characters) start scattered in space — thrown offsets,
 // rotation, scale, no opacity — and CONVERGE into their final positions
 // when `active` flips true.
-// segments: [{ text, className, style, atomic, chars, underline } | { br }].
+// segments: [{ text, className, style, atomic, chars, underline, wave } | { br }].
 // `atomic` keeps a segment as one flying unit, `chars` splits it into
-// per-character units (the accent name), and `underline` mounts the
-// trace underline under the whole segment.
+// per-character units (the accent name), `underline` mounts the trace
+// underline under the whole segment, and `wave` arms a per-char hover
+// ripple once the convergence has fully settled.
 export default function ScatterText({ segments, active, delay = 0, stagger = 0.055, distance = 1 }) {
   const reduced = useReducedMotion();
   const on = active || reduced;
   let w = 0;
+
+  // arm hover effects only after every unit has finished converging, so
+  // the wave animation never fights the assembly transform
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!on) return;
+    if (reduced) { setSettled(true); return; }
+    const totalUnits = segments.reduce((n, seg) => {
+      if (seg.br) return n;
+      if (seg.atomic) return n + 1;
+      if (seg.chars) return n + seg.text.replace(/ /g, '').length;
+      return n + seg.text.split(' ').length;
+    }, 0);
+    const t = setTimeout(() => setSettled(true), (delay + totalUnits * stagger) * 1000 + 950);
+    return () => clearTimeout(t);
+  }, [on, reduced, segments, delay, stagger]);
   return (
     <>
       {segments.map((seg, si) => {
@@ -28,7 +46,7 @@ export default function ScatterText({ segments, active, delay = 0, stagger = 0.0
         return (
           <span
             key={si}
-            className={seg.className}
+            className={`${seg.className || ''}${seg.wave && settled ? ' wave-armed' : ''}`}
             style={{
               ...(seg.underline ? { position: 'relative', display: 'inline-block' } : null),
               ...seg.style,
@@ -50,6 +68,7 @@ export default function ScatterText({ segments, active, delay = 0, stagger = 0.0
               return (
                 <span
                   key={wi}
+                  className={seg.wave ? 'sc-char' : undefined}
                   style={{
                     display: 'inline-block', whiteSpace: 'pre',
                     opacity: on ? 1 : 0,
@@ -57,6 +76,7 @@ export default function ScatterText({ segments, active, delay = 0, stagger = 0.0
                     transition: reduced
                       ? 'none'
                       : `transform 0.9s var(--ease-expo) ${dl}s, opacity 0.7s ease ${dl}s`,
+                    '--ci': wi,
                   }}
                 >
                   {unit}{!seg.atomic && !seg.chars && wi < units.length - 1 ? ' ' : ''}

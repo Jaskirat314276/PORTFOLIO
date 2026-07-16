@@ -104,6 +104,26 @@ export function VerticalTrace({ height = 120, className = '', dotTop = false }) 
   );
 }
 
+// Left-margin circuit run with 45° jogs, scrubbed to the target's scroll
+// window — the trace's s3 (skills) and s6 (achievements→now-building)
+// pass-through segments.
+export function MarginTrace({ targetRef, reduced = false, startAt = 0.9, endAt = 0.35, style }) {
+  const p = useScrollProgress(targetRef, { startAt, endAt });
+  const off = reduced ? 0 : 1 - p;
+  const d = 'M 30 0 L 30 360 L 12 400 L 12 640 L 30 680 L 30 1000';
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 60 1000"
+      preserveAspectRatio="none"
+      style={{ position: 'absolute', left: 0, top: 0, width: 60, height: '100%', pointerEvents: 'none', zIndex: 0, ...style }}
+    >
+      <path d={d} className="trace-path trace-dim" />
+      <path d={d} className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={off} />
+    </svg>
+  );
+}
+
 // THE INTERSECTION BEAT — CODE (from left) × HARDWARE (from right)
 // hairlines draw toward each other, cross under the word "intersection",
 // and merge into one line exiting the bottom. The thesis in one move.

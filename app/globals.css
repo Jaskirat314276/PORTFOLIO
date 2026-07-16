@@ -381,8 +381,8 @@ button { font-family: inherit; }
   100% { opacity: 1; transform: none; }
 }
 
-/* rail pulse tail dots */
-.pulse-tail { position: absolute; left: 50%; top: 0; border-radius: 50%; background: var(--accent); pointer-events: none; }
+/* rail pulse tail dots — trail the signal dot down the rail */
+.pulse-tail { position: absolute; left: 50%; top: 0; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 3; }
 
 /* ============================================================
    Marquee band
@@ -438,6 +438,29 @@ button { font-family: inherit; }
   0% { transform: translateX(-120%); }
   100% { transform: translateX(220%); }
 }
+/* the outbox dot: rides a bezier arc off the card and fades */
+.env-dot {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 10px var(--accent);
+  offset-path: path('M 0 0 C 40 -55, 105 -85, 185 -125');
+  offset-rotate: 0deg;
+  animation: env-launch 1.7s cubic-bezier(0.3, 0, 0.55, 1) forwards;
+}
+@keyframes env-launch {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  75% { opacity: 0.85; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* contact: the trace converges into the email underline ------ */
+.email-trace {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--accent); box-shadow: 0 0 12px var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.9s var(--ease-expo) 0.35s;
+}
+.reveal.in .email-trace { transform: scaleX(1); }
 
 /* ============================================================
    Debug HUD
@@ -504,6 +527,15 @@ section[id] { scroll-margin-top: 80px; }
   color: var(--accent);
 }
 
+/* per-char wave on the hero name — arms after assembly settles */
+.wave-armed:hover .sc-char {
+  animation: char-wave 0.55s var(--ease-expo) calc(var(--ci) * 0.03s) 1;
+}
+@keyframes char-wave {
+  0%, 100% { transform: none; }
+  35% { transform: translateY(-7px); }
+}
+
 /* trace underline under the hero name (ScatterText underline) */
 .name-underline {
   position: absolute; left: 2%; right: 2%; bottom: 0.03em; height: 2px;
@@ -566,7 +598,7 @@ section[id] { scroll-margin-top: 80px; }
 }
 
 @media (max-width: 768px) {
-  .rail-spine, .rail-pulse { left: 15px; }
+  .rail-spine, .rail-pulse, .rail-track .pulse-tail { left: 15px; }
   .rail-hud { display: none; }
   .dossier-card-l, .dossier-card-r { grid-column: 1; justify-self: stretch; }
 }
@@ -589,6 +621,9 @@ section[id] { scroll-margin-top: 80px; }
   .card:not(.ic-card)::after, .paper::after { display: none !important; }
   .pulse-tail { display: none !important; }
   .rail-pulse { display: none !important; }
+  .env-dot { display: none !important; }
+  .email-trace { transform: scaleX(1) !important; }
+  .wave-armed:hover .sc-char { animation: none !important; }
   .name-underline { animation: none !important; transform: scaleX(1) !important; }
   .stamp-icon { opacity: 1 !important; transform: rotate(-6deg) !important; }
   .eyebrow .led { animation: none !important; }

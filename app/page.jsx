@@ -24,10 +24,10 @@ import SlideDock from './components/SlideDock';
 import Spark from './components/Spark';
 import Stamp from './components/Stamp';
 import VelocityMarquee from './components/VelocityMarquee';
-import { VerticalTrace, IntersectionBeat, useScrollProgress, useThresholdCount } from './components/Trace';
+import { VerticalTrace, IntersectionBeat, MarginTrace, useScrollProgress, useThresholdCount } from './components/Trace';
 import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/ScrollBands';
 import { RAIL_THRESHOLDS } from './lib/motion';
-import { useReducedMotion } from './lib/useReducedMotion';
+import { useReducedMotion, detectTier } from './lib/useReducedMotion';
 import {
   Github, Linkedin, ArrowUpRight, Download, Phone, MapPin,
   Code2, Database, Cloud, Cpu, Zap, Brain, Award, GraduationCap,
@@ -166,15 +166,82 @@ const ExpSpine = ({ targetRef, reduced }) => {
 
 const RailSpine = ({ targetRef, reduced }) => {
   const p = useScrollProgress(targetRef, { startAt: 0.8, endAt: 0.25 });
-  useEffect(() => { window.__traceProgress = p; }, [p]);
+  const histRef = useRef([]);
+  const [tier, setTier] = useState('A');
+  const [, settle] = useState(0);
+  useEffect(() => { setTier(detectTier()); }, []);
+  useEffect(() => {
+    window.__traceProgress = p;
+    const h = histRef.current;
+    h.push(p);
+    if (h.length > 26) h.splice(0, h.length - 26);
+    // scroll idle → collapse the tail under the pulse instead of freezing a comet
+    const t = setTimeout(() => { histRef.current = []; settle((v) => v + 1); }, 160);
+    return () => clearTimeout(t);
+  }, [p]);
+
+  // tail samples lag the pulse by reading progress history (1 render behind)
+  const tailCount = tier === 'A' ? 6 : 4;
+  const h = histRef.current;
+  const tail = [];
+  for (let i = 1; i <= tailCount; i++) {
+    const idx = h.length - 1 - i * 3;
+    tail.push(idx >= 0 ? h[idx] : p);
+  }
+
   return (
     <>
       <svg className="rail-spine" aria-hidden="true" viewBox="0 0 2 100" preserveAspectRatio="none">
         <line x1="1" y1="0" x2="1" y2="100" className="trace-path trace-dim" />
         <line x1="1" y1="0" x2="1" y2="100" className="trace-path" pathLength="1" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1 - p} />
       </svg>
-      {!reduced && <span className="rail-pulse" style={{ top: `${p * 100}%` }} aria-hidden="true" />}
+      {!reduced && (
+        <>
+          <span className="rail-pulse" style={{ top: `${p * 100}%` }} aria-hidden="true" />
+          {tail.map((tp, i) => {
+            const s = 5 - i * 0.55;
+            return (
+              <span
+                key={i}
+                className="pulse-tail"
+                aria-hidden="true"
+                style={{ top: `${tp * 100}%`, width: s, height: s, marginLeft: -s / 2, opacity: Math.max(0, 0.45 - i * 0.06) }}
+              />
+            );
+          })}
+        </>
+      )}
     </>
+  );
+};
+
+// glowing dot launches off the HireFlow card along a bezier every ~6s —
+// an email leaving the outbox. IO-gated, pauses on hidden tabs, skipped
+// for reduced motion and tier C.
+const EnvelopeLaunch = () => {
+  const ref = useRef(null);
+  const reduced = useReducedMotion();
+  const [shot, setShot] = useState(0);
+
+  useEffect(() => {
+    if (reduced || detectTier() === 'C') return;
+    const el = ref.current;
+    if (!el) return;
+    let timer;
+    const ob = new IntersectionObserver(([e]) => {
+      clearInterval(timer);
+      if (e.isIntersecting) {
+        timer = setInterval(() => { if (!document.hidden) setShot((s) => s + 1); }, 6000);
+      }
+    }, { threshold: 0.3 });
+    ob.observe(el);
+    return () => { clearInterval(timer); ob.disconnect(); };
+  }, [reduced]);
+
+  return (
+    <span ref={ref} aria-hidden="true" style={{ position: 'absolute', top: 26, right: 150, width: 0, height: 0 }}>
+      {shot > 0 && <span key={shot} className="env-dot" />}
+    </span>
   );
 };
 
@@ -221,6 +288,8 @@ export default function Portfolio() {
   // the page only tracks the DISCRETE lit count (≤6 re-renders per pass)
   const expRef = useRef(null);
   const railRef = useRef(null);
+  const skillsRef = useRef(null);
+  const passRef = useRef(null);
   const litCount = useThresholdCount(railRef, RAIL_THRESHOLDS, { startAt: 0.8, endAt: 0.25 });
 
   const [expDocked, setExpDocked] = useState([false, false, false]);
@@ -343,7 +412,7 @@ export default function Portfolio() {
               segments={[
                 { text: "Hi, I'm" },
                 { br: true },
-                { text: 'Jaskirat Singh', chars: true, underline: true, className: 'ital' },
+                { text: 'Jaskirat Singh', chars: true, underline: true, wave: true, className: 'ital' },
                 { br: true },
                 { text: '— I build things.' },
               ]}
@@ -454,7 +523,9 @@ export default function Portfolio() {
         </section>
 
         {/* SKILLS — IC package module library */}
-        <section id="skills" className="section">
+        <section id="skills" className="section" ref={skillsRef}>
+          {/* trace s3 — margin run down the section's left edge */}
+          <MarginTrace targetRef={skillsRef} reduced={reduced} />
           <div className="container">
             <div className="section-head">
               <GhostNum>02</GhostNum>
@@ -634,6 +705,10 @@ export default function Portfolio() {
         {/* VELOCITY MARQUEE */}
         <VelocityMarquee />
 
+        {/* trace s6 — pass-through margin line: achievements → education → now-building */}
+        <div ref={passRef} style={{ position: 'relative' }}>
+        <MarginTrace targetRef={passRef} reduced={reduced} startAt={0.85} endAt={0.25} />
+
         {/* ACHIEVEMENTS */}
         <section className="section">
           <div className="container">
@@ -710,6 +785,9 @@ export default function Portfolio() {
               </Reveal>
             </div>
             <SlideDock side="left">
+              <div style={{ position: 'relative' }}>
+              {/* launches OUTSIDE the card — .card clips overflow */}
+              <EnvelopeLaunch />
               <a
                 href="https://github.com/Jaskirat314276/AI_EMAIL_SENDER-HIREFLOW-AI-"
                 target="_blank"
@@ -740,9 +818,11 @@ export default function Portfolio() {
                   <Github size={13} /> View the repo <ArrowUpRight size={12} />
                 </span>
               </a>
+              </div>
             </SlideDock>
           </div>
         </section>
+        </div>
 
         {/* CONTACT */}
         <section id="contact" className="section" style={{ padding: '140px 0 90px' }}>
@@ -762,11 +842,14 @@ export default function Portfolio() {
                   className="serif"
                   style={{
                     fontSize: 'clamp(20px, 3.5vw, 42px)', color: 'var(--text)',
-                    borderBottom: '1px solid var(--border-hi)', paddingBottom: 8,
+                    borderBottom: '1px solid var(--border)', paddingBottom: 8,
                     display: 'inline-block', marginBottom: 22, wordBreak: 'break-word',
+                    position: 'relative',
                   }}
                 >
                   jaskiratsingh314276@gmail.com →
+                  {/* trace s7 — the line terminates into the email underline */}
+                  <span className="email-trace" aria-hidden="true" />
                 </a>
               </Magnetic>
             </Reveal>
