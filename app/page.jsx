@@ -30,7 +30,7 @@ import { ConvergeBand, DivergeBand, GhostNum, WordRise } from './components/Scro
 import { RAIL_THRESHOLDS } from './lib/motion';
 import { useReducedMotion, detectTier } from './lib/useReducedMotion';
 import {
-  Github, Linkedin, ArrowUpRight, Download, Phone, MapPin,
+  Github, Linkedin, ArrowUpRight, Download, Phone, MapPin, MessageCircle,
   Code2, Database, Cloud, Cpu, Zap, Brain, Award, GraduationCap,
   Briefcase, Trophy, Sparkles, ChevronDown, Bot, FolderGit2,
 } from 'lucide-react';
@@ -503,6 +503,7 @@ export default function Portfolio() {
     { icon: <Code2 size={16} />, label: 'LeetCode · Jaskirat-singh', href: 'https://leetcode.com/Jaskirat-singh' },
     { icon: <Code2 size={16} />, label: 'GeeksforGeeks · jaskiratsi2k1r', href: 'https://www.geeksforgeeks.org/user/jaskiratsi2k1r' },
     { icon: <Phone size={16} />, label: '+91 8340361891', href: 'tel:+918340361891' },
+    { icon: <MessageCircle size={16} />, label: 'WhatsApp · +91 8340361891', href: 'https://wa.me/918340361891?text=Hi%20Jaskirat%2C%20I%20found%20your%20portfolio%20%E2%80%94' },
   ];
 
   return (
