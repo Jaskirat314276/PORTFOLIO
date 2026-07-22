@@ -61,7 +61,7 @@ export default function CustomCursor() {
         dot.style.background = 'var(--accent)';
         if (label) { label.textContent = LABELS[t] || ''; label.style.opacity = '1'; }
       } else {
-        ring.style.borderColor = 'rgba(240,238,229,0.3)';
+        ring.style.borderColor = 'rgba(245,241,234,0.3)';
         ring.style.background = 'transparent';
         dot.style.background = 'var(--text)';
         if (label) label.style.opacity = '0';
@@ -93,7 +93,7 @@ export default function CustomCursor() {
       }} />
       <div ref={ringRef} className="custom-cursor-ring" style={{
         position: 'fixed', top: 0, left: 0, width: 34, height: 34, borderRadius: '50%',
-        border: '1px solid rgba(240,238,229,0.3)', pointerEvents: 'none', zIndex: 9998,
+        border: '1px solid rgba(245,241,234,0.3)', pointerEvents: 'none', zIndex: 9998,
         transition: 'background 0.3s, border-color 0.3s',
       }} />
       <div ref={labelRef} className="custom-cursor-label" style={{

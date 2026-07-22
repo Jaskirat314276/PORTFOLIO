@@ -8,7 +8,7 @@ export default function GlowField() {
         className="glow-orb"
         style={{
           top: '6%', left: '-14%', width: '600px', height: '600px',
-          background: 'radial-gradient(circle, rgba(217,119,87,0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,107,61,0.15) 0%, transparent 70%)',
         }}
       />
       <div

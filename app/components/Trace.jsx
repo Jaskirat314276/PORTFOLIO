@@ -127,6 +127,7 @@ export function MarginTrace({ targetRef, powerRef, reduced = false, startAt = 0.
   return (
     <svg
       aria-hidden="true"
+      className="margin-trace"
       viewBox="0 0 60 1000"
       preserveAspectRatio="none"
       style={{ position: 'absolute', left: 0, top: 0, width: 60, height: '100%', pointerEvents: 'none', zIndex: 0, ...style }}

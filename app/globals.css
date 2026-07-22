@@ -4,25 +4,25 @@
    THE TRACE — Claude design language, warm-dark. One accent.
    ============================================================ */
 :root {
-  --bg: #1a1815;
-  --surface: #23211d;
-  --surface-hi: #2c2925;
-  --border: #38342d;
-  --border-hi: #4a443a;
-  --text: #f0eee5;
-  --text-dim: #b0aa9c;
-  --text-muted: #7a7466;
-  --accent: #d97757;
-  --accent-dim: #a8593c;
-  --accent-soft: rgba(217, 119, 87, 0.12);
-  --accent2: #a8593c;
-  --accent2-soft: rgba(168, 89, 60, 0.12);
+  --bg: #08080a;
+  --surface: #101013;
+  --surface-hi: #17171b;
+  --border: rgba(245, 241, 234, 0.1);
+  --border-hi: rgba(245, 241, 234, 0.22);
+  --text: #f5f1ea;
+  --text-dim: rgba(245, 241, 234, 0.7);
+  --text-muted: rgba(245, 241, 234, 0.45);
+  --accent: #ff6b3d;
+  --accent-dim: #d9531f;
+  --accent-soft: rgba(255, 107, 61, 0.12);
+  --accent2: #5b9eff;
+  --accent2-soft: rgba(91, 158, 255, 0.12);
   --paper: #faf9f5;
   --paper-ink: #1f1e1d;
   --paper-line: #e8e5db;
-  --success: #7d9b76;
-  --danger: #c45a4a;
-  --info: #6a8fae;
+  --success: #10b981;
+  --danger: #ef4444;
+  --info: #5b9eff;
 
   --serif: var(--font-display), "Instrument Serif", Georgia, serif;
   --sans: var(--font-body), "Bricolage Grotesque", system-ui, sans-serif;
@@ -109,7 +109,7 @@ button { font-family: inherit; }
 }
 /* static glow — animating text-shadow on a giant headline repaints a
    huge area every frame for the page's whole lifetime */
-.head-xl .ital { text-shadow: 0 0 60px rgba(217, 119, 87, 0.45); }
+.head-xl .ital { text-shadow: 0 0 60px rgba(255, 107, 61, 0.45); }
 
 /* Mono eyebrow chip ----------------------------------------- */
 .eyebrow {
@@ -158,7 +158,7 @@ button { font-family: inherit; }
   position: relative;
   /* no backdrop-filter here: ~20 blurred cards compositing against the
      live WebGL canvas is a frame killer, and the gradient hides it anyway */
-  background: linear-gradient(135deg, rgba(240, 238, 229, 0.045) 0%, rgba(240, 238, 229, 0.012) 100%);
+  background: linear-gradient(135deg, rgba(245, 241, 234, 0.045) 0%, rgba(245, 241, 234, 0.012) 100%);
   border: 1px solid var(--border);
   border-radius: 18px;
   transition: border-color 0.35s var(--ease-expo),
@@ -166,9 +166,9 @@ button { font-family: inherit; }
               transform 0.35s var(--ease-expo);
 }
 .card:hover {
-  border-color: rgba(217, 119, 87, 0.4);
-  box-shadow: 0 18px 50px -18px rgba(217, 119, 87, 0.3),
-              inset 0 0 0 1px rgba(217, 119, 87, 0.06);
+  border-color: rgba(255, 107, 61, 0.4);
+  box-shadow: 0 18px 50px -18px rgba(255, 107, 61, 0.3),
+              inset 0 0 0 1px rgba(255, 107, 61, 0.06);
   transform: translateY(-3px);
 }
 /* corner ticks (PCB dressing) — one pseudo, ::after stays free for the sweep */
@@ -188,7 +188,7 @@ button { font-family: inherit; }
 .card:not(.ic-card)::after, .paper::after {
   content: ""; position: absolute; top: 0; left: -130%;
   width: 60%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(240, 238, 229, 0.09), transparent);
+  background: linear-gradient(100deg, transparent, rgba(245, 241, 234, 0.09), transparent);
   transform: translateX(0) skewX(-18deg);
   transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none; z-index: 3;
@@ -252,7 +252,7 @@ button { font-family: inherit; }
 }
 .paper:hover {
   transform: translateY(-4px) rotate(0.4deg);
-  box-shadow: 0 40px 70px -28px rgba(0, 0, 0, 0.8), 0 0 30px -12px rgba(217, 119, 87, 0.35);
+  box-shadow: 0 40px 70px -28px rgba(0, 0, 0, 0.8), 0 0 30px -12px rgba(255, 107, 61, 0.35);
 }
 .stamp {
   display: inline-flex; align-items: center; gap: 6px;
@@ -262,7 +262,7 @@ button { font-family: inherit; }
   padding: 6px 12px; border: 1.5px solid var(--accent);
   border-radius: 6px;
   transform: rotate(-8deg);
-  background: rgba(217, 119, 87, 0.06);
+  background: rgba(255, 107, 61, 0.06);
 }
 /* ink halo — a ring that expands and fades the moment the stamp lands */
 .ink-halo {
@@ -519,7 +519,7 @@ button { font-family: inherit; }
 .cform textarea { resize: vertical; min-height: 96px; }
 .cform input::placeholder, .cform textarea::placeholder { color: var(--text-muted); }
 .cform input:focus, .cform textarea:focus {
-  outline: none; border-color: rgba(217, 119, 87, 0.55);
+  outline: none; border-color: rgba(255, 107, 61, 0.55);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .cform button {
@@ -641,7 +641,7 @@ section[id] { scroll-margin-top: 80px; }
 .rail-pulse {
   position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
   border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(217, 119, 87, 0.5);
+  box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(255, 107, 61, 0.5);
   z-index: 4; pointer-events: none;
 }
 .rail-hud {
@@ -658,7 +658,7 @@ section[id] { scroll-margin-top: 80px; }
 }
 .rail-stub.left { right: 50%; }
 .rail-stub.right { left: 50%; }
-.rail-stub.lit { background: var(--accent); box-shadow: 0 0 8px rgba(217, 119, 87, 0.6); }
+.rail-stub.lit { background: var(--accent); box-shadow: 0 0 8px rgba(255, 107, 61, 0.6); }
 .rail-via {
   position: absolute; top: 50%; left: 50%; width: 11px; height: 11px;
   transform: translate(-50%, -50%); border-radius: 50%;
@@ -667,13 +667,18 @@ section[id] { scroll-margin-top: 80px; }
 }
 .rail-via.lit {
   border-color: var(--accent); background: var(--accent-soft);
-  box-shadow: 0 0 12px rgba(217, 119, 87, 0.7);
+  box-shadow: 0 0 12px rgba(255, 107, 61, 0.7);
 }
 
 @media (max-width: 768px) {
   .rail-spine, .rail-pulse, .rail-track .pulse-tail { left: 15px; }
   .rail-hud { display: none; }
   .dossier-card-l, .dossier-card-r { grid-column: 1; justify-self: stretch; }
+  /* margin traces cross the content column at narrow widths — hide them
+     (the rail + spine carry the trace on mobile) */
+  .margin-trace { display: none; }
+  /* blurred lagging shadows cost paint on weak GPUs and barely read here */
+  .dock-shadow { display: none; }
 }
 
 /* ============================================================
@@ -687,7 +692,7 @@ section[id] { scroll-margin-top: 80px; }
 .nf-board::before {
   content: ""; position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
   width: 480px; height: 480px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, rgba(217, 119, 87, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 107, 61, 0.1) 0%, transparent 70%);
   filter: blur(60px);
 }
 .nf-circuit { display: flex; flex-direction: column; align-items: center; }
@@ -761,7 +766,7 @@ section[id] { scroll-margin-top: 80px; }
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--accent);
-  border: 1px solid rgba(217, 119, 87, 0.5); border-radius: 6px;
+  border: 1px solid rgba(255, 107, 61, 0.5); border-radius: 6px;
   padding: 5px 10px; margin-left: 14px; vertical-align: middle;
   background: var(--accent-soft);
   animation: hud-pop 0.4s var(--ease-back);

@@ -228,13 +228,13 @@ const CopyEmail = () => {
   };
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', marginBottom: 22 }}>
-      <a href={`mailto:${EMAIL}`} onClick={copy} data-cursor="press" className="serif" style={serifStyle} title="Click to copy">
+    <span style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 12, marginBottom: 22, maxWidth: '100%' }}>
+      <a href={`mailto:${EMAIL}`} onClick={copy} data-cursor="press" className="serif" style={{ ...serifStyle, minWidth: 0, maxWidth: '100%' }} title="Click to copy">
         {EMAIL}
         {/* trace s7 — the line terminates into the email underline */}
         <span className="email-trace" aria-hidden="true" />
       </a>
-      <a href={`mailto:${EMAIL}`} aria-label="Compose an email" className="serif" style={{ fontSize: 'clamp(20px, 3.5vw, 42px)', marginLeft: 12 }}>
+      <a href={`mailto:${EMAIL}`} aria-label="Compose an email" className="serif" style={{ fontSize: 'clamp(20px, 3.5vw, 42px)' }}>
         →
       </a>
       {copied && <span className="copied-chip" aria-hidden="true">Copied ✓</span>}
@@ -358,7 +358,7 @@ const RailHud = ({ targetRef }) => {
         className="mono"
         style={{
           fontSize: 10, letterSpacing: '0.16em', color: 'var(--text-dim)',
-          background: 'rgba(35,33,29,0.85)', backdropFilter: 'blur(8px)',
+          background: 'rgba(16,16,19,0.85)', backdropFilter: 'blur(8px)',
           border: '1px solid var(--border)', borderRadius: 6, padding: '7px 12px',
         }}
       >
@@ -405,8 +405,8 @@ export default function Portfolio() {
     sessionStorage.setItem('js-console', '1');
     console.log(
       '%cTHE TRACE%c signal acquired — you read consoles. so does jaskirat: jaskiratsingh314276@gmail.com',
-      'background:#d97757;color:#1a1815;padding:2px 8px;border-radius:4px;font-weight:600',
-      'color:#b0aa9c;padding-left:6px'
+      'background:#ff6b3d;color:#08080a;padding:2px 8px;border-radius:4px;font-weight:600',
+      'color:rgba(245,241,234,0.7);padding-left:6px'
     );
   }, []);
 
@@ -628,7 +628,7 @@ export default function Portfolio() {
                 <Reveal className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   <span className="chip" style={{ transitionDelay: '0.05s' }}><MapPin size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: '-1px' }} />Ranchi, India</span>
                   <span className="chip" style={{ transitionDelay: '0.1s' }}>BIT Mesra · 2026</span>
-                  <span className="chip" style={{ transitionDelay: '0.15s', color: 'var(--accent)', borderColor: 'rgba(217,119,87,0.4)' }}>Open to work</span>
+                  <span className="chip" style={{ transitionDelay: '0.15s', color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.4)' }}>Open to work</span>
                 </Reveal>
               </div>
             </div>
@@ -709,7 +709,7 @@ export default function Portfolio() {
                         border: '1.5px solid', zIndex: 2,
                         borderColor: expDocked[i] ? 'var(--accent)' : 'var(--border-hi)',
                         background: expDocked[i] ? 'var(--accent-soft)' : 'var(--bg)',
-                        boxShadow: expDocked[i] ? '0 0 12px rgba(217,119,87,0.7)' : 'none',
+                        boxShadow: expDocked[i] ? '0 0 12px rgba(255,107,61,0.7)' : 'none',
                         transition: 'border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease',
                       }}
                     />
@@ -747,7 +747,7 @@ export default function Portfolio() {
                         </ul>
                         <div className="cascade" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                           {e.stack.map((t, ci) => (
-                            <span key={t} className="chip" style={{ color: 'var(--accent)', borderColor: 'rgba(217,119,87,0.3)', transitionDelay: `${0.2 + ci * 0.03}s` }}>{t}</span>
+                            <span key={t} className="chip" style={{ color: 'var(--accent)', borderColor: 'rgba(255,107,61,0.3)', transitionDelay: `${0.2 + ci * 0.03}s` }}>{t}</span>
                           ))}
                         </div>
                       </div>
@@ -859,7 +859,7 @@ export default function Portfolio() {
                         width: 46, height: 46, borderRadius: 11, flexShrink: 0,
                         background: 'var(--accent-soft)', color: 'var(--accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '1px solid rgba(217,119,87,0.3)',
+                        border: '1px solid rgba(255,107,61,0.3)',
                       }}>{a.icon}</div>
                       <div>
                         <h3 style={{ fontSize: 16.5, fontWeight: 500, marginBottom: 6, letterSpacing: '-0.01em' }}>{a.title}</h3>
@@ -891,7 +891,7 @@ export default function Portfolio() {
                       width: 50, height: 50, borderRadius: 13,
                       background: 'var(--accent-soft)', color: 'var(--accent)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '1px solid rgba(217,119,87,0.3)',
+                      border: '1px solid rgba(255,107,61,0.3)',
                     }}><GraduationCap size={22} /></div>
                     <div>
                       <h3 style={{ fontSize: 19, fontWeight: 500, marginBottom: 5, letterSpacing: '-0.01em' }}>{ed.degree}</h3>
@@ -930,12 +930,12 @@ export default function Portfolio() {
                 <span className="mono" style={{
                   position: 'absolute', top: 20, right: 22, overflow: 'hidden',
                   fontSize: 9.5, letterSpacing: '0.18em', color: 'var(--accent)',
-                  border: '1px solid rgba(217,119,87,0.4)', borderRadius: 5, padding: '5px 10px',
+                  border: '1px solid rgba(255,107,61,0.4)', borderRadius: 5, padding: '5px 10px',
                 }}>
                   In development
                   <span aria-hidden="true" style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(100deg, transparent, rgba(217,119,87,0.22), transparent)',
+                    background: 'linear-gradient(100deg, transparent, rgba(255,107,61,0.22), transparent)',
                     animation: 'scan-sheen 2.8s linear infinite',
                   }} />
                 </span>

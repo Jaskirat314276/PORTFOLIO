@@ -66,7 +66,7 @@ export default function Nav({ linkPrefix = '', paper = false }) {
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  const barBg = paper ? 'rgba(250,249,245,0.82)' : 'rgba(35,33,29,0.82)';
+  const barBg = paper ? 'rgba(250,249,245,0.82)' : 'rgba(16,16,19,0.82)';
   const ink = paper ? 'var(--paper-ink)' : 'var(--text)';
   const dim = paper ? 'rgba(31,30,29,0.6)' : 'var(--text-dim)';
   const hair = paper ? 'var(--paper-line)' : 'var(--border)';
@@ -144,7 +144,7 @@ export default function Nav({ linkPrefix = '', paper = false }) {
               className="nav-cta"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '9px 18px', background: 'var(--accent)', color: '#1a1815',
+                padding: '9px 18px', background: 'var(--accent)', color: '#08080a',
                 borderRadius: 999, fontFamily: 'var(--mono)', fontSize: 11,
                 letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 500,
               }}
@@ -175,7 +175,7 @@ export default function Nav({ linkPrefix = '', paper = false }) {
           onClick={() => setOpen(false)}
           style={{
             position: 'fixed', inset: 0, zIndex: 149,
-            background: paper ? 'rgba(250,249,245,0.96)' : 'rgba(26,24,21,0.96)',
+            background: paper ? 'rgba(250,249,245,0.96)' : 'rgba(8,8,10,0.96)',
             backdropFilter: 'blur(18px)',
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24,

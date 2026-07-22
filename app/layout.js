@@ -61,7 +61,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1a1815",
+  themeColor: "#08080a",
 };
 
 // structured data — real profile facts only

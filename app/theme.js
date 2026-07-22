@@ -5,25 +5,25 @@
 // ============================================================
 
 export const palette = {
-  bg: '#1a1815', // cool near-black
-  surface: '#23211d',
-  surfaceHi: '#2c2925',
-  border: 'rgba(240,238,229,0.1)',
-  borderHi: 'rgba(240,238,229,0.22)',
-  text: '#f0eee5', // warm ivory
-  textDim: 'rgba(240,238,229,0.7)',
-  textMuted: 'rgba(240,238,229,0.45)',
-  accent: '#d97757', // primary orange
+  bg: '#08080a', // cool near-black
+  surface: '#101013',
+  surfaceHi: '#17171b',
+  border: 'rgba(245,241,234,0.1)',
+  borderHi: 'rgba(245,241,234,0.22)',
+  text: '#f5f1ea', // warm ivory
+  textDim: 'rgba(245,241,234,0.7)',
+  textMuted: 'rgba(245,241,234,0.45)',
+  accent: '#ff6b3d', // primary orange
   accentDim: '#a8593c',
-  accentSoft: 'rgba(217,119,87,0.12)',
-  accent2: '#a8593c', // deep terracotta
+  accentSoft: 'rgba(255,107,61,0.12)',
+  accent2: '#5b9eff', // secondary blue
   accent2Soft: 'rgba(91,158,255,0.12)',
   paper: '#faf9f5', // paper-cream dossiers + detail pages
   paperInk: '#1f1e1d',
   paperLine: '#e8e5db',
-  success: '#7d9b76',
-  danger: '#c45a4a',
-  info: '#6a8fae',
+  success: '#10b981',
+  danger: '#ef4444',
+  info: '#5b9eff',
 };
 
 export const font = {

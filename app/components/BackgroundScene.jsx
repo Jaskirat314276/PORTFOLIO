@@ -41,7 +41,7 @@ export default function BackgroundScene() {
     mount.appendChild(renderer.domElement);
 
     // ── shared assets (every instance reuses these; disposed once) ──
-    const ACCENT = 0xd97757, DIM = 0xa8593c, IVORY = 0xf0eee5;
+    const ACCENT = 0xff6b3d, BLUE = 0x5b9eff, IVORY = 0xf5f1ea;
     const geos = [], mats = [];
     const g = (geo) => { geos.push(geo); return geo; };
     const m = (mat) => { mats.push(mat); return mat; };
@@ -52,11 +52,11 @@ export default function BackgroundScene() {
     const line = (color, opacity) => m(new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
 
     const accentMat = solid(ACCENT, 0.34);
-    const blueMat = solid(DIM, 0.3);
+    const blueMat = solid(BLUE, 0.28);
     const ivoryMat = solid(IVORY, 0.26);
-    const orbitMat = basic(IVORY, 0.22);
+    const orbitMat = basic(BLUE, 0.3);
     const lineAccent = line(ACCENT, 0.45);
-    const lineBlue = line(DIM, 0.5);
+    const lineBlue = line(BLUE, 0.4);
     const lineIvory = line(IVORY, 0.35);
 
     const barGeo = g(new THREE.BoxGeometry(0.95, 0.11, 0.11));
@@ -198,7 +198,7 @@ export default function BackgroundScene() {
         const tone = Math.random();
         if (tone < 0.6) { colors[i * 3] = 1; colors[i * 3 + 1] = 0.95; colors[i * 3 + 2] = 0.9; }
         else if (tone < 0.85) { colors[i * 3] = 1; colors[i * 3 + 1] = 0.55; colors[i * 3 + 2] = 0.3; }
-        else { colors[i * 3] = 0.72; colors[i * 3 + 1] = 0.68; colors[i * 3 + 2] = 0.6; }
+        else { colors[i * 3] = 0.4; colors[i * 3 + 1] = 0.65; colors[i * 3 + 2] = 1; }
       }
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -216,8 +216,8 @@ export default function BackgroundScene() {
     }
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const keyLight = new THREE.PointLight(0xd97757, 4, 40); scene.add(keyLight);
-    const fillLight = new THREE.PointLight(0xf0eee5, 2, 40); scene.add(fillLight);
+    const keyLight = new THREE.PointLight(0xff6b3d, 4, 40); scene.add(keyLight);
+    const fillLight = new THREE.PointLight(0x5b9eff, 3, 40); scene.add(fillLight);
     const rimLight = new THREE.PointLight(0xffffff, 1.5, 30); scene.add(rimLight);
 
     const parallax = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -261,10 +261,11 @@ export default function BackgroundScene() {
         grp.rotation.x += u.rotSpeed.x * 0.01;
         grp.rotation.y += u.rotSpeed.y * 0.01;
         grp.rotation.z += u.rotSpeed.z * 0.01;
-        if (fly && u.basePos.z > camZ + BEHIND) {
-          // fell behind the camera → respawn ahead at a fresh lateral spot
-          u.basePos.z -= CORRIDOR;
-          lateral(u.basePos);
+        if (fly) {
+          // bidirectional recycling: wrap into the camera's window whichever
+          // way you scroll, so returning to the top restores a full field
+          while (u.basePos.z > camZ + BEHIND) { u.basePos.z -= CORRIDOR; lateral(u.basePos); }
+          while (u.basePos.z < camZ - AHEAD) { u.basePos.z += CORRIDOR; lateral(u.basePos); }
         }
         grp.position.x = u.basePos.x + Math.sin(t * u.floatSpeed * 0.4 + i) * u.floatAmp;
         grp.position.y = u.basePos.y + Math.cos(t * u.floatSpeed * 0.5 + i * 0.7) * u.floatAmp * 0.8;
@@ -272,7 +273,10 @@ export default function BackgroundScene() {
       });
       starTiles.forEach((tile) => {
         tile.rotation.z = t * 0.008;
-        if (fly && tile.position.z - TILE_DEPTH / 2 > camZ + 6) tile.position.z -= TILE_DEPTH * tileCount;
+        if (fly) {
+          while (tile.position.z - TILE_DEPTH / 2 > camZ + 6) tile.position.z -= TILE_DEPTH * tileCount;
+          while (tile.position.z + TILE_DEPTH / 2 < camZ - 130) tile.position.z += TILE_DEPTH * tileCount;
+        }
       });
 
       camera.position.x += (parallax.x * 1.8 - camera.position.x) * 0.05;

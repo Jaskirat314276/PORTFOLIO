@@ -1,18 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ExternalLink, Github, Check } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Github } from 'lucide-react';
 import { projects, getProject } from '../data';
 import Nav from '../../components/Nav';
 import Magnetic from '../../components/Magnetic';
 import Reveal from '../../components/Reveal';
+import GlowField from '../../components/GlowField';
+import GrainOverlay from '../../components/GrainOverlay';
 
 const STAMP_FOR = {
   '01': 'FLAGSHIP · 2026', '02': 'SHIPPED', '03': 'LIVE DEMO',
   '04': 'LIVE DEMO', '05': 'HARDWARE · 300V TESTED', '06': 'SIMULATION',
 };
-
-// detail pages are paper — mobile browser chrome follows the flip
-export const viewport = { themeColor: "#faf9f5" };
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -28,84 +27,82 @@ export async function generateMetadata({ params }) {
   };
 }
 
+// Detail pages share the main page's dark board language: espresso-black
+// bg, orange accent, mono eyebrows, ghost numeral, dark chips.
 export default async function ProjectPage({ params }) {
   const { slug } = await params;
   const project = getProject(slug);
   if (!project) notFound();
 
-  const ink = 'var(--paper-ink)';
-  const dim = 'rgba(31,30,29,0.62)';
-  const line = 'var(--paper-line)';
-
   return (
-    <div className="paper-page" style={{
-      minHeight: '100vh', background: 'var(--paper)', color: ink,
-      fontFamily: 'var(--sans)', position: 'relative',
-    }}>
+    <div className="page" style={{ background: 'var(--bg)', color: 'var(--text)', minHeight: '100vh' }}>
       <style>{`
-        .paper-page { animation: paperIn 0.32s ease both; }
-        @keyframes paperIn { from { background: #1a1815; } to { background: var(--paper); } }
         .tick-draw { stroke-dasharray: 22; stroke-dashoffset: 22; animation: tickDraw 0.4s ease forwards; }
         @keyframes tickDraw { to { stroke-dashoffset: 0; } }
-        .paper-btn { transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease; }
-        .paper-btn:hover { transform: translateY(-2px); }
+        .detail-head { position: relative; overflow-x: clip; }
+        .detail-btn { transition: transform 0.18s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+        .detail-btn:hover { transform: translateY(-2px); }
         @media (prefers-reduced-motion: reduce) {
-          .paper-page { animation: none; }
           .tick-draw { animation: none; stroke-dashoffset: 0; }
+          .detail-btn:hover { transform: none; }
         }
       `}</style>
 
-      <Nav linkPrefix="/" paper />
+      <GlowField />
+      <GrainOverlay />
+      <Nav linkPrefix="/" />
 
-      <main className="container" style={{ maxWidth: 900, paddingTop: 108, paddingBottom: 120 }}>
+      <main className="container" style={{ maxWidth: 960, paddingTop: 108, paddingBottom: 120, position: 'relative' }}>
         <Reveal>
-          <Link href="/#projects" data-cursor="view" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8, color: dim, fontSize: 14,
-            fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 44,
+          <Link href="/#projects" data-cursor="view" className="mono" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)',
+            fontSize: 12, marginBottom: 44,
           }}>
             <ArrowLeft size={15} /> Back to the rail
           </Link>
         </Reveal>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+        <div className="detail-head">
+          {/* ghost numeral — same texture as the main page sections */}
+          <span className="ghost-num" aria-hidden="true" style={{ top: '-0.2em' }}>{project.num}</span>
+
           <Reveal>
-            <div className="serif" style={{ fontSize: 'clamp(72px, 12vw, 132px)', color: 'var(--accent-dim)', lineHeight: 0.9 }}>
-              {project.num}
+            <div className="eyebrow" style={{ marginBottom: 26 }}>
+              <span className="led" />
+              File {project.num}/0{projects.length} — {project.date}
             </div>
           </Reveal>
-          <span className="stamp" style={{ marginTop: 24 }}>{STAMP_FOR[project.num]}</span>
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
+            <Reveal delay={0.05} style={{ minWidth: 0 }}>
+              <h1 className="head" style={{ fontSize: 'clamp(32px, 6vw, 64px)', maxWidth: 780 }}>
+                {project.title}
+              </h1>
+            </Reveal>
+            <span className="stamp" style={{ marginTop: 10, flexShrink: 0 }}>{STAMP_FOR[project.num]}</span>
+          </div>
         </div>
 
-        <Reveal delay={0.05}>
-          <div className="mono" style={{ fontSize: 11, color: dim, marginTop: 10, marginBottom: 18 }}>{project.date}</div>
-        </Reveal>
-
-        <Reveal delay={0.1}>
-          <h1 className="serif" style={{ fontSize: 'clamp(30px, 5.5vw, 60px)', fontWeight: 400, lineHeight: 1.06, letterSpacing: '-0.01em', marginBottom: 34, color: ink }}>
-            {project.title}
-          </h1>
-        </Reveal>
-
         {project.links && (project.links.github || project.links.demo) && (
-          <Reveal delay={0.15}>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
-              {project.links.github && (
+          <Reveal delay={0.12}>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', margin: '36px 0 0' }}>
+              {project.links.demo && (
                 <Magnetic>
-                  <a href={project.links.github} target="_blank" rel="noreferrer" data-cursor="press" className="paper-btn" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px',
-                    border: `1px solid ${ink}`, borderRadius: 999, fontSize: 14, color: ink,
+                  <a href={project.links.demo} target="_blank" rel="noreferrer" data-cursor="press" className="detail-btn" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px',
+                    background: 'var(--text)', color: 'var(--bg)', borderRadius: 999, fontSize: 14, fontWeight: 500,
                   }}>
-                    <Github size={14} /> GitHub
+                    <ExternalLink size={15} /> Live Demo
                   </a>
                 </Magnetic>
               )}
-              {project.links.demo && (
+              {project.links.github && (
                 <Magnetic>
-                  <a href={project.links.demo} target="_blank" rel="noreferrer" data-cursor="press" className="paper-btn" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px',
-                    background: 'var(--accent)', color: 'var(--paper)', borderRadius: 999, fontSize: 14, fontWeight: 500,
+                  <a href={project.links.github} target="_blank" rel="noreferrer" data-cursor="press" className="detail-btn" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px',
+                    border: '1px solid var(--border-hi)', borderRadius: 999, fontSize: 14, color: 'var(--text)',
                   }}>
-                    <ExternalLink size={14} /> Live Demo
+                    <Github size={15} /> GitHub
                   </a>
                 </Magnetic>
               )}
@@ -113,36 +110,35 @@ export default async function ProjectPage({ params }) {
           </Reveal>
         )}
 
-        <Reveal delay={0.2}>
-          <p style={{ fontSize: 17.5, lineHeight: 1.75, color: 'rgba(31,30,29,0.82)', marginBottom: 40, maxWidth: 720 }}>
+        <Reveal delay={0.18}>
+          <p style={{ fontSize: 17.5, lineHeight: 1.75, color: 'var(--text-dim)', margin: '40px 0', maxWidth: 720 }}>
             {project.desc}
           </p>
         </Reveal>
 
-        <Reveal delay={0.25}>
+        <Reveal delay={0.24}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 56 }}>
             {project.tags.map((t) => (
-              <span key={t} className="mono" style={{
-                fontSize: 10, letterSpacing: '0.08em', padding: '6px 12px', borderRadius: 6,
-                background: line, color: 'rgba(31,30,29,0.68)',
-              }}>{t}</span>
+              <span key={t} className="chip">{t}</span>
             ))}
           </div>
         </Reveal>
 
         {project.highlights?.length > 0 && (
           <Reveal delay={0.3}>
-            <div className="mono" style={{ fontSize: 11, color: 'var(--accent-dim)', marginBottom: 22 }}>— HIGHLIGHTS</div>
-            <ul style={{ listStyle: 'none', display: 'grid', gap: 16, borderTop: `1px solid ${line}`, paddingTop: 26 }}>
-              {project.highlights.map((h, i) => (
-                <li key={i} style={{ display: 'flex', gap: 14, fontSize: 16, lineHeight: 1.6, color: 'rgba(31,30,29,0.85)' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
-                    <path className="tick-draw" d="M5 12.5l4.5 4.5L19 7" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: `${0.35 + i * 0.12}s` }} />
-                  </svg>
-                  <span>{h}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="card corner-ticks" style={{ padding: 'clamp(24px, 4vw, 40px)' }}>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 24 }}>— Highlights</div>
+              <ul style={{ listStyle: 'none', display: 'grid', gap: 16 }}>
+                {project.highlights.map((h, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 14, fontSize: 15.5, lineHeight: 1.65, color: 'var(--text-dim)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }} aria-hidden="true">
+                      <path className="tick-draw" d="M5 12.5l4.5 4.5L19 7" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ animationDelay: `${0.35 + i * 0.12}s` }} />
+                    </svg>
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Reveal>
         )}
       </main>

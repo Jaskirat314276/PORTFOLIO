@@ -41,7 +41,7 @@ export function ConvergeBand() {
             position: 'absolute', inset: 0, borderRadius: '50%',
             border: `1.5px solid ${met ? 'var(--accent)' : 'var(--border-hi)'}`,
             background: met ? 'var(--accent-soft)' : 'transparent',
-            boxShadow: met ? '0 0 14px rgba(217,119,87,0.7)' : 'none',
+            boxShadow: met ? '0 0 14px rgba(255,107,61,0.7)' : 'none',
             transform: met ? 'scale(1.15)' : 'scale(1)',
             transition: 'all 0.35s var(--ease-back)',
           }} />
@@ -98,7 +98,7 @@ export function DivergeBand() {
       }}>
         <span aria-hidden="true" style={{
           width: 'clamp(24px, 6vw, 90px)', height: 1.5, background: 'var(--accent)',
-          boxShadow: '0 0 6px rgba(217,119,87,0.6)',
+          boxShadow: '0 0 6px rgba(255,107,61,0.6)',
           transform: `scaleX(${spread})`, transformOrigin: 'right',
           transition: 'transform 0.2s linear',
         }} />
@@ -112,7 +112,7 @@ export function DivergeBand() {
         ))}
         <span aria-hidden="true" style={{
           width: 'clamp(24px, 6vw, 90px)', height: 1.5, background: 'var(--accent)',
-          boxShadow: '0 0 6px rgba(217,119,87,0.6)',
+          boxShadow: '0 0 6px rgba(255,107,61,0.6)',
           transform: `scaleX(${spread})`, transformOrigin: 'left',
           transition: 'transform 0.2s linear',
         }} />

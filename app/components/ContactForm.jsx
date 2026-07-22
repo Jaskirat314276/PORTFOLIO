@@ -70,7 +70,9 @@ export default function ContactForm() {
       </button>
       {status === 'error' && (
         <p className="mono" style={{ fontSize: 10.5, color: 'var(--danger)', marginTop: 4 }}>
-          Something broke — email me instead: jaskiratsingh314276@gmail.com
+          {typeof window !== 'undefined' && window.location.hostname === 'localhost'
+            ? 'Local preview — the form only submits on the live Netlify site.'
+            : 'Something broke — email me instead: jaskiratsingh314276@gmail.com'}
         </p>
       )}
     </form>
