@@ -634,12 +634,13 @@ section[id] { scroll-margin-top: 80px; }
 }
 
 /* THE PROJECT RAIL ------------------------------------------ */
+/* the rail runs down the LEFT margin; every dossier docks to its right */
 .rail-spine {
-  position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
+  position: absolute; top: 0; left: 30px; width: 2px; height: 100%;
   transform: translateX(-1px); overflow: visible; pointer-events: none;
 }
 .rail-pulse {
-  position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
+  position: absolute; left: 30px; width: 7px; height: 7px; margin-left: -3.5px;
   border-radius: 50%; background: var(--accent);
   box-shadow: 0 0 12px var(--accent), 0 0 26px rgba(255, 107, 61, 0.5);
   z-index: 4; pointer-events: none;
@@ -648,9 +649,9 @@ section[id] { scroll-margin-top: 80px; }
   position: sticky; top: 84px; z-index: 6; height: 0;
   display: flex; justify-content: flex-end; pointer-events: none;
 }
-.dossier-card-l { grid-column: 1; justify-self: end; }
-.dossier-card-r { grid-column: 3; justify-self: start; }
-.rail-col { grid-column: 2; position: relative; align-self: stretch; min-height: 64px; }
+.dossier-card-l, .dossier-card-r { grid-column: 2; justify-self: start; }
+.rail-col { grid-column: 1; position: relative; align-self: stretch; min-height: 64px; }
+.rail-track .pulse-tail { left: 30px; }
 .rail-stub {
   position: absolute; top: 50%; height: 1.5px; width: 50%;
   background: var(--border-hi);

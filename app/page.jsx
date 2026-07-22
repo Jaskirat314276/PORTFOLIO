@@ -782,26 +782,25 @@ export default function Portfolio() {
               <RailSpine targetRef={railRef} powerRef={projSecRef} reduced={reduced} />
 
               {projects.map((p, i) => {
-                const fromLeft = i % 2 === 0;
                 const lit = reduced || litCount > i;
                 const desc = p.slug === 'warehouse-optimizer' ? `${p.desc.split('. ')[0]}.` : p.desc;
                 return (
                   <div
                     key={p.slug}
                     className="dossier-row"
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', margin: '46px 0' }}
+                    style={{ display: 'grid', gridTemplateColumns: '60px 1fr', alignItems: 'center', margin: '46px 0' }}
                   >
                     <div className="rail-col" aria-hidden="true">
-                      <span className={`rail-stub ${fromLeft ? 'left' : 'right'} ${lit ? 'lit' : ''}`} />
+                      <span className={`rail-stub right ${lit ? 'lit' : ''}`} />
                       <span className={`rail-via ${lit ? 'lit' : ''}`} />
                       <Spark fire={railDocked[i]} style={{ left: '50%', top: '50%' }} />
                     </div>
                     <SlideDock
-                      side={fromLeft ? 'left' : 'right'}
+                      side="right"
                       onDocked={() => dockRail(i)}
                       shadow
-                      className={fromLeft ? 'dossier-card-l' : 'dossier-card-r'}
-                      style={{ width: '100%', maxWidth: 520 }}
+                      className="dossier-card-r"
+                      style={{ width: '100%', maxWidth: 560 }}
                     >
                       <Link
                         href={`/projects/${p.slug}`}
